@@ -1,0 +1,49 @@
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+release.properties
+dependency-reduced-pom.xml
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.settings/
+.project
+.classpath
+.factorypath
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+application-local.yml
+application-local.properties
+
+# Temp files
+docx_temp/
+**/docx_temp/
+
+# Build
+build/
+out/
+
+# Generated
+backend-generated.zip
+requisitos_extracted.txt
