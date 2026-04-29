@@ -1,0 +1,36 @@
+spring:
+  profiles:
+    active: prod
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://postgres:5432/talentcircle}
+    username: ${DATABASE_USER:talentcircle}
+    password: ${DATABASE_PASSWORD:talentcircle}
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+  
+  llm:
+    provider: ${LLM_PROVIDER:openai}
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      model: ${OPENAI_MODEL:gpt-4-turbo}
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY}
+      model: ${ANTHROPIC_MODEL:claude-3-sonnet-20240229}
+
+  linkedin:
+    access-token: ${LINKEDIN_ACCESS_TOKEN}
+    person-id: ${LINKEDIN_PERSON_ID}
+
+logging:
+  level:
+    com.talentcircle: INFO
+    org.springframework: WARN
+    org.hibernate: WARN

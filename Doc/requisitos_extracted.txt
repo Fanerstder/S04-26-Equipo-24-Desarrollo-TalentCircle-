@@ -1,0 +1,876 @@
+﻿TalentCircle
+Pipeline Inteligente de Contenido Comunitario
+DOCUMENTO DE ANÃLISIS Y ESPECIFICACIÃ“N DE REQUISITOS
+VersiÃ³n 1.0 | Abril 2025
+Aspecto
+Detalle
+Proyecto
+TalentCircle Content Pipeline
+Tipo
+SaaS â€“ AutomatizaciÃ³n Editorial
+Stack Backend
+Java 21 + Spring Boot 3.x
+Stack Frontend
+React 18 + TypeScript
+MetodologÃ­a
+Scrum â€“ Sprints de 2 semanas
+1. IntroducciÃ³n y DescripciÃ³n del Proyecto
+1.1 Contexto del Negocio
+TalentCircle es una plataforma de comunidades tÃ©cnicas que publica contenido en mÃºltiples canales: un boletÃ­n semanal, LinkedIn, Twitter/X y el feed interno de cada comunidad. Actualmente, un editor compila manualmente el contenido revisando las discusiones mÃ¡s activas de la semana, los recursos compartidos y las sesiones realizadas. Este proceso consume aproximadamente medio dÃ­a laboral y con frecuencia se pierde contenido valioso.
+1.2 Problema
+El flujo editorial manual presenta tres problemas crÃ­ticos:
+Tiempo excesivo: el editor dedica 4-6 horas semanales solo a recopilar y resumir actividad.
+PÃ©rdida de contenido: las contribuciones de menor visibilidad inmediata no son identificadas a tiempo.
+Inconsistencia de formato: los borradores no siempre se adaptan correctamente a cada canal (newsletter vs. LinkedIn vs. Twitter).
+1.3 SoluciÃ³n Propuesta
+Un pipeline automatizado que: recopila la actividad comunitaria semanal, la procesa con IA para identificar las contribuciones mÃ¡s relevantes y genera borradores diferenciados por canal, disponibles para que el editor los revise, edite y apruebe los lunes. La soluciÃ³n se entrega como una aplicaciÃ³n web full-stack con backend en Java Spring Boot y frontend en React.
+1.4 Alcance
+Pipeline de recolecciÃ³n de datos comunitarios (API o webhooks de la plataforma de comunidad).
+MÃ³dulo de anÃ¡lisis LLM para identificar temas relevantes y generar resÃºmenes.
+Generador de borradores diferenciados: newsletter (largo), LinkedIn (mediano), Twitter (muy corto).
+Panel de revisiÃ³n editorial: visualizar, editar y aprobar borradores.
+IntegraciÃ³n de publicaciÃ³n: exportaciÃ³n estructurada o integraciÃ³n directa con LinkedIn API.
+Scheduler automÃ¡tico: ejecuciÃ³n cada viernes al finalizar el dÃ­a.
+2. GuÃ­a de EspecificaciÃ³n TÃ©cnica (TSG)
+2.1 VisiÃ³n General de la Arquitectura
+La arquitectura sigue el patrÃ³n de microservicios desacoplados con comunicaciÃ³n asÃ­ncrona entre el orquestador del pipeline y los mÃ³dulos de procesamiento LLM. El frontend React consume la API REST expuesta por Spring Boot.
+Capas principales:
+Capa de RecolecciÃ³n: jobs de Spring Batch que consumen APIs externas de la plataforma comunitaria.
+Capa de Procesamiento IA: servicio que invoca la API de Anthropic Claude / OpenAI para anÃ¡lisis y generaciÃ³n de texto.
+Capa de Persistencia: PostgreSQL para almacenamiento de actividad, borradores y estados de aprobaciÃ³n.
+Capa de PresentaciÃ³n: React SPA que consume la API REST del backend.
+Capa de PublicaciÃ³n: cliente HTTP hacia LinkedIn API; exportaciÃ³n JSON/CSV como alternativa.
+2.2 Stack TecnolÃ³gico
+Capa
+TecnologÃ­a
+JustificaciÃ³n
+Backend Core
+Java 21 + Spring Boot 3.x
+LTS, madurez empresarial, ecosistema Spring robusto
+ORM / Persistencia
+Spring Data JPA + Hibernate
+EstÃ¡ndar de facto para persistencia en Spring
+Base de datos
+PostgreSQL 16
+ACID, soporte JSON, extensible
+Scheduler
+Spring Scheduler + Quartz
+Control de jobs cron con persistencia
+Procesamiento IA
+OpenAI / Claude API (HTTP client)
+GeneraciÃ³n y anÃ¡lisis de texto de alta calidad
+MensajerÃ­a async
+Spring Events / RabbitMQ (futuro)
+Desacoplar pipeline de generaciÃ³n
+Frontend
+React 18 + TypeScript
+Tipado estÃ¡tico, DX moderna
+UI Components
+TailwindCSS + shadcn/ui
+DiseÃ±o consistente y rÃ¡pido
+Estado Cliente
+Zustand / React Query
+GestiÃ³n de estado y cachÃ© de API
+AutenticaciÃ³n
+Spring Security + JWT
+Stateless, estÃ¡ndar de industria
+DocumentaciÃ³n API
+Springdoc OpenAPI 3
+Auto-generaciÃ³n de docs desde anotaciones
+CI/CD
+GitHub Actions + Docker
+AutomatizaciÃ³n de build y despliegue
+ContenerizaciÃ³n
+Docker + Docker Compose
+Portabilidad y reproducibilidad
+2.3 MÃ³dulos del Sistema
+2.3.1 community-collector
+Responsable de conectarse con la API de la plataforma comunitaria (Discord, Circle.so, Slack, etc.) y almacenar en PostgreSQL: posts mÃ¡s reaccionados, preguntas mÃ¡s respondidas, recursos mÃ¡s compartidos. Se ejecuta como un Spring Batch Job cada viernes a las 18:00.
+2.3.2 ai-analyzer
+Consume los datos recolectados, agrupa por temÃ¡tica usando embeddings o clustering bÃ¡sico, llama al LLM con prompts diferenciados para generar: un resumen ejecutivo, los 3-5 temas mÃ¡s relevantes y una propuesta de contenido por canal.
+2.3.3 draft-generator
+A partir del anÃ¡lisis del LLM genera tres tipos de borrador: newsletter (800-1200 palabras), LinkedIn (150-300 palabras) y Twitter/X (hasta 280 caracteres). Almacena los borradores con estado PENDIENTE.
+2.3.4 review-api
+Expone los endpoints REST que consume el panel editorial: listar borradores, leer un borrador, actualizar contenido editado, cambiar estado (PENDIENTE, APROBADO, RECHAZADO, PUBLICADO).
+2.3.5 publisher
+Al aprobarse un borrador, invoca la API de destino (LinkedIn API v2) o genera un archivo de exportaciÃ³n (JSON estructurado). Maneja reintentos y registra resultados.
+2.4 Flujo de Datos End-to-End
+Viernes 18:00
+El scheduler activa el Job de recolecciÃ³n.
+Viernes 18:05
+community-collector llama a las APIs externas y persiste actividad cruda en BD.
+Viernes 18:30
+ai-analyzer lee la actividad, llama al LLM y persiste el anÃ¡lisis.
+Viernes 19:00
+draft-generator crea borradores por canal con estado PENDIENTE.
+Lunes AM
+El editor abre el panel, visualiza y edita los borradores.
+Lunes AM
+El editor aprueba borradores; publisher los envÃ­a o exporta.
+2.5 Consideraciones de Seguridad
+AutenticaciÃ³n JWT Bearer Token para todos los endpoints de la API.
+Roles: EDITOR (lectura/escritura de borradores), ADMIN (configuraciÃ³n del sistema).
+Secretos (API keys de LLM, LinkedIn) almacenados en variables de entorno o Vault.
+Rate limiting en endpoints pÃºblicos usando Spring Security + Bucket4j.
+CORS configurado para aceptar solo el dominio del frontend.
+3. Usuarios del Sistema
+Rol
+DescripciÃ³n
+Acciones Principales
+Editor de Contenido
+Profesional editorial de TalentCircle que revisa y aprueba los borradores generados cada semana.
+Ver borradores, editar texto, aprobar/rechazar, activar publicaciÃ³n.
+Administrador del Sistema
+Responsable tÃ©cnico que configura el pipeline, canales y credenciales.
+Configurar fuentes, programar ejecuciones, gestionar usuarios, ver logs.
+Miembro de la Comunidad
+Participante cuyas contribuciones son amplificadas (actor indirecto).
+Generar contenido (posts, recursos) que alimenta el pipeline.
+Sistema LLM (Externo)
+API de IA que analiza y genera texto (Claude/OpenAI).
+Recibir prompts estructurados, devolver anÃ¡lisis y borradores.
+4. Historias de Usuario
+4.1 Editor de Contenido
+ID
+Rol
+AcciÃ³n
+Beneficio
+Criterios Ac.
+US-01
+Editor
+Quiero ver todos los borradores de la semana en un panel Ãºnico
+Para revisar eficientemente el contenido sin buscar en mÃºltiples archivos
+Panel muestra lista paginada de borradores con canal, estado y fecha.
+US-02
+Editor
+Quiero leer el borrador completo de cada canal con su contexto de origen
+Para evaluar si el contenido es fiel a las contribuciones comunitarias
+Vista detalle muestra borrador + actividad fuente resaltada.
+US-03
+Editor
+Quiero editar el texto del borrador directamente en el panel
+Para ajustar el tono o precisiÃ³n sin herramientas externas
+Editor inline con historial de cambios guardado automÃ¡ticamente.
+US-04
+Editor
+Quiero aprobar un borrador con un solo clic
+Para agilizar el flujo de publicaciÃ³n sin pasos intermedios innecesarios
+BotÃ³n Aprobar cambia estado a APROBADO y habilita publicaciÃ³n.
+US-05
+Editor
+Quiero rechazar un borrador e indicar el motivo
+Para que el sistema aprenda y mejore en iteraciones futuras
+Modal de rechazo con campo de comentario obligatorio.
+US-06
+Editor
+Quiero publicar en LinkedIn directamente desde el panel
+Para eliminar el paso manual de copiar y pegar en LinkedIn
+BotÃ³n Publicar invoca LinkedIn API; muestra confirmaciÃ³n o error.
+US-07
+Editor
+Quiero exportar los borradores aprobados como JSON/CSV
+Para canales que no tienen integraciÃ³n directa (newsletter, Twitter)
+BotÃ³n Exportar genera archivo descargable con todos los aprobados.
+US-08
+Editor
+Quiero recibir una notificaciÃ³n el lunes por la maÃ±ana con los borradores listos
+Para saber cuÃ¡ndo estÃ¡ disponible el contenido sin revisar manualmente
+Email/Slack notification con resumen de borradores generados.
+4.2 Administrador del Sistema
+ID
+Rol
+AcciÃ³n
+Beneficio
+Criterios Ac.
+US-09
+Administrador
+Quiero configurar las fuentes de datos comunitarios
+Para conectar el sistema con la plataforma usada por cada comunidad
+Interfaz de configuraciÃ³n para agregar/editar fuentes con credenciales.
+US-10
+Administrador
+Quiero ajustar los prompts utilizados por el LLM por canal
+Para personalizar el tono y formato de los borradores generados
+Editor de plantillas de prompts con variables dinÃ¡micas.
+US-11
+Administrador
+Quiero ver el historial de ejecuciones del pipeline
+Para diagnosticar errores y monitorear la salud del sistema
+Pantalla de logs con filtros por fecha, estado y duraciÃ³n.
+US-12
+Administrador
+Quiero ejecutar el pipeline manualmente
+Para pruebas o cuando se requiere contenido fuera del ciclo semanal
+BotÃ³n Run Now en panel de administraciÃ³n con confirmaciÃ³n.
+US-13
+Administrador
+Quiero gestionar los usuarios editores
+Para controlar el acceso al panel de revisiÃ³n
+CRUD de usuarios con asignaciÃ³n de roles.
+5. Requisitos Funcionales
+5.1 MÃ³dulo: RecolecciÃ³n de Actividad Comunitaria
+ID
+Nombre
+DescripciÃ³n
+Prioridad
+Estado
+RF-01
+RecolecciÃ³n AutomÃ¡tica Semanal
+El sistema debe ejecutar automÃ¡ticamente la recolecciÃ³n de datos cada viernes a las 18:00 hora local configurada.
+Alta
+Definido
+RF-02
+Posts MÃ¡s Reaccionados
+El sistema debe obtener los N posts con mayor nÃºmero de reacciones de la semana (N configurable, defecto: 10).
+Alta
+Definido
+RF-03
+Preguntas MÃ¡s Respondidas
+El sistema debe obtener las preguntas con mayor nÃºmero de respuestas de los Ãºltimos 7 dÃ­as.
+Alta
+Definido
+RF-04
+Recursos MÃ¡s Compartidos
+El sistema debe identificar los recursos (links, archivos) con mayor nÃºmero de comparticiones.
+Media
+Definido
+RF-05
+MÃºltiples Fuentes
+El sistema debe soportar configuraciÃ³n de mÃºltiples fuentes de comunidad (Discord, Circle.so, Slack).
+Media
+Definido
+RF-06
+Almacenamiento de Actividad Cruda
+Toda actividad recolectada debe persistirse en base de datos antes del procesamiento IA.
+Alta
+Definido
+5.2 MÃ³dulo: AnÃ¡lisis IA
+ID
+Nombre
+DescripciÃ³n
+Prioridad
+Estado
+RF-07
+AnÃ¡lisis de Relevancia
+El LLM debe evaluar cada Ã­tem recolectado y asignar una puntuaciÃ³n de relevancia del 1 al 10.
+Alta
+Definido
+RF-08
+SelecciÃ³n de Temas
+El sistema debe identificar los 3-5 temas mÃ¡s relevantes de la semana para usar como base de los borradores.
+Alta
+Definido
+RF-09
+GeneraciÃ³n de Resumen Ejecutivo
+El LLM debe generar un resumen ejecutivo de la actividad semanal en espaÃ±ol.
+Alta
+Definido
+RF-10
+ConfiguraciÃ³n de Prompts
+Los prompts enviados al LLM deben ser configurables por canal desde la interfaz de administraciÃ³n.
+Media
+Definido
+RF-11
+Soporte Multi-LLM
+El sistema debe permitir configurar el proveedor LLM (OpenAI GPT-4, Claude Sonnet).
+Media
+Backlog
+5.3 MÃ³dulo: GeneraciÃ³n de Borradores
+ID
+Nombre
+DescripciÃ³n
+Prioridad
+Estado
+RF-12
+Borrador Newsletter
+Generar borrador de newsletter en espaÃ±ol, formato largo (800-1200 palabras) con tÃ­tulo, secciones y CTAs.
+Alta
+Definido
+RF-13
+Borrador LinkedIn
+Generar borrador de LinkedIn en espaÃ±ol, formato mediano (150-300 palabras), tono profesional y emojis moderados.
+Alta
+Definido
+RF-14
+Borrador Twitter/X
+Generar borrador de Twitter en espaÃ±ol, mÃ¡ximo 280 caracteres, con hashtags relevantes.
+Alta
+Definido
+RF-15
+VinculaciÃ³n de Fuentes
+Cada borrador debe referenciar los posts/recursos que lo originaron.
+Alta
+Definido
+RF-16
+Versiones de Borrador
+El sistema debe mantener versiones de cada borrador tras cada ediciÃ³n del editor.
+Media
+Definido
+5.4 MÃ³dulo: Panel de RevisiÃ³n Editorial
+ID
+Nombre
+DescripciÃ³n
+Prioridad
+Estado
+RF-17
+Listado de Borradores
+El panel debe mostrar todos los borradores de la semana actual con: canal, estado, fecha y resumen.
+Alta
+Definido
+RF-18
+Vista Detalle
+Al seleccionar un borrador, mostrar el texto completo con las contribuciones comunitarias fuente.
+Alta
+Definido
+RF-19
+EdiciÃ³n Inline
+El editor puede modificar el texto del borrador directamente en el panel con autoguardado.
+Alta
+Definido
+RF-20
+Flujo de AprobaciÃ³n
+Botones: Aprobar, Rechazar (con comentario obligatorio), Solicitar RevisiÃ³n.
+Alta
+Definido
+RF-21
+Filtros y BÃºsqueda
+Filtrar borradores por canal, estado y rango de fechas.
+Media
+Definido
+RF-22
+Indicador de IA Score
+Mostrar la puntuaciÃ³n de relevancia asignada por el LLM para cada borrador.
+Baja
+Backlog
+5.5 MÃ³dulo: PublicaciÃ³n y ExportaciÃ³n
+ID
+Nombre
+DescripciÃ³n
+Prioridad
+Estado
+RF-23
+PublicaciÃ³n en LinkedIn
+Al aprobar un borrador de LinkedIn, el sistema puede publicarlo directamente usando LinkedIn API v2.
+Alta
+Definido
+RF-24
+ExportaciÃ³n JSON
+El sistema debe generar un archivo JSON con todos los borradores aprobados, estructurado por canal.
+Alta
+Definido
+RF-25
+ExportaciÃ³n CSV
+El sistema debe generar un archivo CSV alternativo para integraciÃ³n con herramientas externas.
+Media
+Definido
+RF-26
+Estado de PublicaciÃ³n
+El sistema debe registrar y mostrar si un borrador fue publicado exitosamente, con timestamp.
+Alta
+Definido
+RF-27
+Reintento de PublicaciÃ³n
+Si la publicaciÃ³n falla, el sistema debe reintentar hasta 3 veces con backoff exponencial.
+Media
+Backlog
+5.6 MÃ³dulo: AutenticaciÃ³n y AdministraciÃ³n
+ID
+Nombre
+DescripciÃ³n
+Prioridad
+Estado
+RF-28
+AutenticaciÃ³n JWT
+El sistema debe autenticar usuarios mediante email/contraseÃ±a y emitir JWT con expiraciÃ³n de 8 horas.
+Alta
+Definido
+RF-29
+Roles de Usuario
+El sistema debe soportar roles: ADMIN y EDITOR con permisos diferenciados.
+Alta
+Definido
+RF-30
+GestiÃ³n de Usuarios
+El ADMIN puede crear, editar, desactivar usuarios y asignar roles.
+Alta
+Definido
+RF-31
+ConfiguraciÃ³n de Fuentes
+El ADMIN puede agregar/editar/eliminar fuentes de datos comunitarios.
+Alta
+Definido
+RF-32
+EjecuciÃ³n Manual del Pipeline
+El ADMIN puede ejecutar el pipeline manualmente desde el panel.
+Media
+Definido
+RF-33
+Historial de Ejecuciones
+El sistema debe registrar cada ejecuciÃ³n del pipeline con estado, duraciÃ³n y errores.
+Media
+Definido
+6. Requisitos No Funcionales
+6.1 Rendimiento
+RNF-01 Tiempo de Respuesta API
+El 95% de las peticiones a la API deben responder en menos de 500 ms bajo carga normal (hasta 50 usuarios concurrentes).
+RNF-02 Tiempo del Pipeline
+El pipeline completo (recolecciÃ³n + anÃ¡lisis IA + generaciÃ³n) debe completarse en menos de 60 minutos.
+RNF-03 Carga de la UI
+El tiempo de carga inicial del panel editorial (LCP) debe ser inferior a 2 segundos en conexiÃ³n de 10 Mbps.
+6.2 Disponibilidad y Fiabilidad
+RNF-04 Uptime
+El sistema debe garantizar 99.5% de disponibilidad mensual (excluye ventanas de mantenimiento programadas).
+RNF-05 Tolerancia a Fallos del LLM
+Si el proveedor LLM no responde, el pipeline debe registrar el error, notificar al ADMIN y no perder los datos recolectados.
+RNF-06 Persistencia ante Fallos
+Los datos recolectados se persisten antes del procesamiento IA; un fallo parcial no elimina la actividad cruda.
+6.3 Seguridad
+RNF-07 AutenticaciÃ³n
+Todas las rutas de API (excepto /auth/login) deben requerir JWT vÃ¡lido.
+RNF-08 Almacenamiento de Secretos
+Las API keys de LLM y LinkedIn nunca se almacenan en texto claro; se usan variables de entorno o un gestor de secretos (Vault/AWS Secrets Manager).
+RNF-09 HTTPS
+Toda comunicaciÃ³n cliente-servidor debe ocurrir sobre HTTPS/TLS 1.2+.
+RNF-10 AuditorÃ­a
+Toda acciÃ³n del editor (editar, aprobar, rechazar, publicar) debe registrarse en un log de auditorÃ­a inmutable.
+6.4 Escalabilidad y Mantenibilidad
+RNF-11 Despliegue Contenerizado
+La aplicaciÃ³n debe desplegarse como contenedores Docker para facilitar escalado horizontal.
+RNF-12 Cobertura de Tests
+El backend debe mantener cobertura de tests unitarios &gt;= 80% (JUnit 5 + Mockito).
+RNF-13 DocumentaciÃ³n de API
+La API REST debe estar documentada automÃ¡ticamente con OpenAPI 3 (Springdoc).
+RNF-14 Observabilidad
+El sistema debe exponer mÃ©tricas Prometheus y trazas compatibles con Grafana/Jaeger.
+6.5 Usabilidad
+RNF-15 DiseÃ±o Responsivo
+El panel editorial debe ser usable en pantallas de 1280px o superiores.
+RNF-16 InternacionalizaciÃ³n
+La interfaz y los borradores generados deben estar en espaÃ±ol por defecto.
+RNF-17 Accesibilidad
+El frontend debe cumplir con WCAG 2.1 nivel AA para los componentes principales.
+7. Diagramas UML
+7.1 Diagrama de Casos de Uso
+A continuaciÃ³n se describen los casos de uso principales del sistema TalentCircle Content Pipeline, organizados por actor:
+UC-01: Ejecutar Pipeline Semanal
+Actor Principal
+Sistema (Scheduler automÃ¡tico) / Administrador (manual)
+PrecondiciÃ³n
+Fuentes de datos configuradas y credenciales vÃ¡lidas
+Flujo Principal
+1. Scheduler activa el job cada viernes 18:00. 2. community-collector consulta APIs externas. 3. Datos se persisten en BD. 4. ai-analyzer procesa actividad con LLM. 5. draft-generator crea borradores. 6. Sistema notifica al Editor.
+Flujo Alternativo
+Si una fuente externa falla, se registra el error y se continÃºa con las demÃ¡s fuentes disponibles.
+PostcondiciÃ³n
+Borradores disponibles en el panel con estado PENDIENTE
+UC-02: Revisar y Aprobar Borrador
+Actor Principal
+Editor de Contenido
+PrecondiciÃ³n
+El editor estÃ¡ autenticado. Existen borradores en estado PENDIENTE.
+Flujo Principal
+1. Editor accede al panel. 2. Selecciona un borrador. 3. Lee el contenido y la actividad fuente. 4. Edita el texto si es necesario. 5. Hace clic en Aprobar. 6. El sistema cambia el estado a APROBADO.
+Flujo Alternativo
+Si el editor rechaza el borrador, debe ingresar un comentario. El estado cambia a RECHAZADO.
+PostcondiciÃ³n
+Borrador en estado APROBADO listo para publicaciÃ³n
+UC-03: Publicar en LinkedIn
+Actor Principal
+Editor de Contenido
+PrecondiciÃ³n
+Existe al menos un borrador de LinkedIn en estado APROBADO. Credenciales de LinkedIn configuradas.
+Flujo Principal
+1. Editor selecciona el borrador aprobado. 2. Hace clic en Publicar. 3. El sistema llama a LinkedIn API v2. 4. LinkedIn confirma la publicaciÃ³n. 5. El borrador cambia a estado PUBLICADO con timestamp.
+Flujo Alternativo
+Si LinkedIn API falla, el sistema reintenta hasta 3 veces. Si persiste el error, notifica al Editor.
+PostcondiciÃ³n
+Post publicado en LinkedIn; registro de publicaciÃ³n en BD
+UC-04: Exportar Borradores
+Actor Principal
+Editor de Contenido
+PrecondiciÃ³n
+Existen borradores en estado APROBADO.
+Flujo Principal
+1. Editor selecciona el perÃ­odo y canales a exportar. 2. Elige formato (JSON o CSV). 3. El sistema genera el archivo. 4. El archivo se descarga automÃ¡ticamente.
+PostcondiciÃ³n
+Archivo de exportaciÃ³n descargado en el equipo del editor
+UC-05: Configurar Sistema
+Actor Principal
+Administrador
+PrecondiciÃ³n
+Usuario autenticado con rol ADMIN.
+Flujo Principal
+1. Admin accede al panel de administraciÃ³n. 2. Configura fuentes de datos (URL, API key, tipo). 3. Ajusta plantillas de prompts LLM por canal. 4. Guarda configuraciÃ³n.
+PostcondiciÃ³n
+Sistema actualiza configuraciÃ³n; prÃ³xima ejecuciÃ³n usa la nueva config.
+7.2 Diagrama de Clases â€“ Backend (Spring Boot)
+A continuaciÃ³n se describen las principales entidades y sus relaciones en la capa de dominio del backend:
+Entidades de Dominio
+Clase
+Atributos Principales
+Relaciones
+WeeklyExecution
+id, weekStartDate, weekEndDate, status (RUNNING/COMPLETED/FAILED), startedAt, completedAt, triggeredBy
+1 tiene N CommunityActivity; 1 tiene N Draft
+CommunityActivity
+id, type (POST/QUESTION/RESOURCE), sourceId, title, content, reactionCount, responseCount, shareCount, author, publishedAt, sourceUrl, executionId
+N pertenecen a 1 WeeklyExecution; N originan M DraftSource
+AiAnalysis
+id, executionId, topTopics (JSON), executiveSummary, relevanceScores (JSON), generatedAt, llmProvider, promptTokens, completionTokens
+1 por WeeklyExecution
+Draft
+id, executionId, channel (NEWSLETTER/LINKEDIN/TWITTER), content, editedContent, status (PENDING/APPROVED/REJECTED/PUBLISHED), aiScore, createdAt, updatedAt, approvedBy, approvedAt, rejectionReason
+N pertenecen a 1 WeeklyExecution; 1 tiene N DraftVersion; 1 tiene N DraftSource
+DraftVersion
+id, draftId, content, editedBy, editedAt, versionNumber
+N pertenecen a 1 Draft
+DraftSource
+id, draftId, activityId, relevanceScore
+Tabla intermedia Draft-CommunityActivity
+Publication
+id, draftId, channel, status (SUCCESS/FAILED/RETRYING), externalPostId, publishedAt, errorMessage, retryCount
+1 por Draft
+User
+id, email, passwordHash, fullName, role (ADMIN/EDITOR), active, createdAt, lastLoginAt
+1 User aprueba N Draft
+CommunitySource
+id, name, type (DISCORD/CIRCLE/SLACK), apiUrl, apiKeyEncrypted, active, communityId, config (JSON)
+ConfiguraciÃ³n de fuentes
+PipelineConfig
+id, llmProvider, llmModel, newsletterPrompt, linkedinPrompt, twitterPrompt, maxItemsPerChannel, scheduleCron
+Singleton de configuraciÃ³n
+Servicios Principales
+Servicio
+Responsabilidad
+Dependencias
+PipelineOrchestratorService
+Coordina la ejecuciÃ³n completa del pipeline: recolecciÃ³n â†’ anÃ¡lisis â†’ generaciÃ³n.
+CommunityCollectorService, AiAnalyzerService, DraftGeneratorService
+CommunityCollectorService
+Conecta con APIs externas y persiste CommunityActivity.
+CommunityActivityRepository, CommunitySource config
+AiAnalyzerService
+Construye prompts, llama al LLM y persiste AiAnalysis.
+LlmClientPort (interfaz), AiAnalysisRepository
+DraftGeneratorService
+Genera borradores diferenciados por canal a partir del AiAnalysis.
+DraftRepository, AiAnalysis
+DraftReviewService
+Gestiona el ciclo de vida de los borradores (editar, aprobar, rechazar).
+DraftRepository, DraftVersionRepository
+PublisherService
+Publica en canales externos (LinkedIn) o exporta archivos.
+LinkedInClientPort, DraftRepository
+AuthService
+AutenticaciÃ³n y emisiÃ³n de JWT.
+UserRepository, JwtUtil
+7.3 Diagrama de Dominio
+El modelo de dominio captura los conceptos centrales del negocio y sus invariantes:
+Agregados de Dominio
+WeeklyExecution (RaÃ­z de Agregado)
+Representa una ejecuciÃ³n completa del pipeline semanal. Contiene toda la actividad recolectada, el anÃ¡lisis IA y los borradores generados para esa semana. Invariante: una ejecuciÃ³n no puede pasar a COMPLETED si alguno de sus pasos obligatorios fallÃ³ sin recuperaciÃ³n.
+Draft (RaÃ­z de Agregado)
+Borrador de contenido para un canal especÃ­fico. Gestiona su propio ciclo de vida (PENDING â†’ APPROVED/REJECTED â†’ PUBLISHED). Invariante: solo puede aprobarse si el contenido no estÃ¡ vacÃ­o. Solo puede publicarse si estÃ¡ APPROVED.
+CommunitySource (Entidad)
+Fuente de datos de una comunidad. Encapsula las credenciales y la configuraciÃ³n de conexiÃ³n. Invariante: una fuente activa debe tener apiUrl y apiKey configurados.
+User (Entidad)
+Usuario del sistema editorial. Invariante: el email debe ser Ãºnico en el sistema. Un usuario inactivo no puede autenticarse.
+Value Objects
+Channel
+Enum: NEWSLETTER, LINKEDIN, TWITTER. Define el formato y restricciones de longitud para cada tipo de borrador.
+DraftStatus
+Enum: PENDING, APPROVED, REJECTED, PUBLISHED. MÃ¡quina de estados con transiciones permitidas explÃ­citas.
+ActivityType
+Enum: POST, QUESTION, RESOURCE. Determina cÃ³mo se procesa el Ã­tem en el anÃ¡lisis IA.
+RelevanceScore
+Value Object numÃ©rico [1-10] con validaciÃ³n de rango. Asignado por el LLM a cada actividad y borrador.
+LlmProvider
+Enum: OPENAI, ANTHROPIC. Configura el cliente HTTP a usar.
+Eventos de Dominio
+PipelineStartedEvent
+Emitido al iniciar una WeeklyExecution. Payload: executionId, weekStart.
+ActivityCollectedEvent
+Emitido al completar la recolecciÃ³n. Payload: executionId, itemCount.
+AnalysisCompletedEvent
+Emitido al completar el anÃ¡lisis IA. Payload: executionId, analysisId, topTopics.
+DraftsGeneratedEvent
+Emitido cuando todos los borradores de una ejecuciÃ³n estÃ¡n creados. Payload: executionId, draftCount.
+DraftApprovedEvent
+Emitido cuando un borrador es aprobado. Payload: draftId, channel, approvedBy.
+DraftPublishedEvent
+Emitido cuando un borrador se publica exitosamente. Payload: draftId, channel, externalPostId.
+8. DiseÃ±o de la API REST
+8.1 Endpoints de AutenticaciÃ³n
+MÃ©todo + Ruta
+DescripciÃ³n
+Request / Response
+POST /api/v1/auth/login
+Autenticar usuario y obtener JWT
+Body: {email, password} â†’ {token, expiresIn, user}
+POST /api/v1/auth/refresh
+Renovar token JWT
+Header: Bearer token â†’ {token, expiresIn}
+POST /api/v1/auth/logout
+Invalidar sesiÃ³n (blacklist token)
+Header: Bearer token â†’ 204 No Content
+8.2 Endpoints de Borradores
+MÃ©todo + Ruta
+DescripciÃ³n
+ParÃ¡metros / Response
+GET /api/v1/drafts
+Listar borradores con filtros
+Query: week, channel, status, page, size â†’ Page&lt;DraftSummaryDTO&gt;
+GET /api/v1/drafts/{id}
+Obtener borrador detallado
+Path: id â†’ DraftDetailDTO (con fuentes y versiones)
+PATCH /api/v1/drafts/{id}/content
+Editar contenido del borrador
+Body: {editedContent} â†’ DraftDetailDTO actualizado
+POST /api/v1/drafts/{id}/approve
+Aprobar borrador
+Path: id â†’ DraftDetailDTO con status=APPROVED
+POST /api/v1/drafts/{id}/reject
+Rechazar borrador
+Body: {reason} â†’ DraftDetailDTO con status=REJECTED
+POST /api/v1/drafts/{id}/publish
+Publicar borrador aprobado
+Path: id â†’ PublicationResultDTO
+GET /api/v1/drafts/export
+Exportar borradores aprobados
+Query: week, format (json|csv) â†’ archivo descargable
+8.3 Endpoints de Ejecuciones
+MÃ©todo + Ruta
+DescripciÃ³n
+ParÃ¡metros / Response
+GET /api/v1/executions
+Listar ejecuciones del pipeline
+Query: page, size, status â†’ Page&lt;ExecutionSummaryDTO&gt;
+GET /api/v1/executions/{id}
+Detalle de una ejecuciÃ³n
+Path: id â†’ ExecutionDetailDTO con logs
+POST /api/v1/executions/trigger
+Ejecutar pipeline manualmente (ADMIN)
+Body: {weekStart?} â†’ ExecutionSummaryDTO
+8.4 Endpoints de AdministraciÃ³n
+MÃ©todo + Ruta
+DescripciÃ³n
+ParÃ¡metros / Response
+GET /api/v1/admin/sources
+Listar fuentes comunitarias
+â†’ List&lt;CommunitySourceDTO&gt;
+POST /api/v1/admin/sources
+Crear fuente comunitaria
+Body: CommunitySourceCreateDTO â†’ CommunitySourceDTO
+PUT /api/v1/admin/sources/{id}
+Actualizar fuente
+Body: CommunitySourceUpdateDTO â†’ CommunitySourceDTO
+DELETE /api/v1/admin/sources/{id}
+Eliminar fuente
+â†’ 204 No Content
+GET /api/v1/admin/config
+Obtener configuraciÃ³n del pipeline
+â†’ PipelineConfigDTO
+PUT /api/v1/admin/config
+Actualizar configuraciÃ³n
+Body: PipelineConfigUpdateDTO â†’ PipelineConfigDTO
+GET /api/v1/admin/users
+Listar usuarios (ADMIN)
+â†’ Page&lt;UserDTO&gt;
+POST /api/v1/admin/users
+Crear usuario
+Body: UserCreateDTO â†’ UserDTO
+PATCH /api/v1/admin/users/{id}
+Actualizar usuario
+Body: UserUpdateDTO â†’ UserDTO
+9. Estructura del Proyecto
+9.1 Backend â€“ Spring Boot
+Estructura de paquetes siguiendo arquitectura hexagonal (Ports &amp; Adapters):
+com.talentcircle.pipeline
+Paquete raÃ­z de la aplicaciÃ³n
+  .domain.model
+Entidades y Value Objects del dominio
+  .domain.event
+Eventos de dominio
+  .domain.port.in
+Interfaces de casos de uso (input ports)
+  .domain.port.out
+Interfaces de repositorios y clientes externos (output ports)
+  .application.service
+ImplementaciÃ³n de los servicios de aplicaciÃ³n
+  .adapter.in.web
+Controladores REST (Spring MVC)
+  .adapter.in.scheduler
+Jobs de Spring Scheduler / Quartz
+  .adapter.out.persistence
+Repositorios JPA, entidades de BD
+  .adapter.out.llm
+Cliente HTTP para OpenAI/Claude API
+  .adapter.out.linkedin
+Cliente HTTP para LinkedIn API v2
+  .adapter.out.community
+Clientes para APIs de Discord, Circle, Slack
+  .config
+ConfiguraciÃ³n de Spring Beans (Security, CORS, OpenAPI, etc.)
+  .shared.dto
+DTOs de request/response compartidos
+  .shared.exception
+Excepciones de dominio y handlers globales
+  .shared.util
+Utilidades (JWT, EncriptaciÃ³n, etc.)
+9.2 Frontend â€“ React + TypeScript
+src/
+RaÃ­z del cÃ³digo fuente
+  api/
+Clientes de API (axios instances, hooks de React Query)
+  components/
+Componentes UI reutilizables (shadcn/ui customizados)
+  pages/
+PÃ¡ginas principales de la aplicaciÃ³n
+    Login/
+Pantalla de autenticaciÃ³n
+    Dashboard/
+Panel principal con resumen de la semana
+    Drafts/
+Lista de borradores y vista detalle/editor
+    Executions/
+Historial de ejecuciones del pipeline
+    Admin/
+Panel de administraciÃ³n (ADMIN only)
+  store/
+Estado global con Zustand
+  hooks/
+Custom hooks de React
+  types/
+Interfaces TypeScript para entidades del dominio
+  utils/
+Funciones utilitarias
+  router/
+ConfiguraciÃ³n de React Router con rutas protegidas
+10. Modelo de Datos â€“ Esquema PostgreSQL
+10.1 Tablas Principales
+Tabla
+Columnas Clave
+Notas
+weekly_executions
+id UUID PK, week_start DATE, week_end DATE, status VARCHAR(20), started_at TIMESTAMPTZ, completed_at TIMESTAMPTZ, triggered_by UUID FK users
+Ãndice en week_start, status
+community_activities
+id UUID PK, execution_id UUID FK, type VARCHAR(20), source_id VARCHAR(255), title TEXT, content TEXT, reaction_count INT, response_count INT, share_count INT, author VARCHAR(255), published_at TIMESTAMPTZ, source_url TEXT
+Ãndice en execution_id, type
+ai_analyses
+id UUID PK, execution_id UUID FK UNIQUE, top_topics JSONB, executive_summary TEXT, relevance_scores JSONB, generated_at TIMESTAMPTZ, llm_provider VARCHAR(50), prompt_tokens INT, completion_tokens INT
+JSONB para consultas flexibles
+drafts
+id UUID PK, execution_id UUID FK, channel VARCHAR(20), content TEXT, edited_content TEXT, status VARCHAR(20), ai_score DECIMAL(4,2), created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ, approved_by UUID FK users, approved_at TIMESTAMPTZ, rejection_reason TEXT
+Ãndice en execution_id, channel, status
+draft_versions
+id UUID PK, draft_id UUID FK, content TEXT, edited_by UUID FK users, edited_at TIMESTAMPTZ, version_number INT
+Historial inmutable de ediciones
+draft_sources
+id UUID PK, draft_id UUID FK, activity_id UUID FK, relevance_score DECIMAL(4,2)
+Tabla de uniÃ³n M:N
+publications
+id UUID PK, draft_id UUID FK, channel VARCHAR(20), status VARCHAR(20), external_post_id VARCHAR(255), published_at TIMESTAMPTZ, error_message TEXT, retry_count INT DEFAULT 0
+Registro de publicaciones
+users
+id UUID PK, email VARCHAR(255) UNIQUE, password_hash VARCHAR(255), full_name VARCHAR(255), role VARCHAR(20), active BOOLEAN DEFAULT true, created_at TIMESTAMPTZ, last_login_at TIMESTAMPTZ
+AutenticaciÃ³n y roles
+community_sources
+id UUID PK, name VARCHAR(255), type VARCHAR(20), api_url TEXT, api_key_encrypted TEXT, active BOOLEAN, community_id VARCHAR(255), config JSONB, created_at TIMESTAMPTZ
+Credenciales encriptadas en BD
+pipeline_configs
+id UUID PK DEFAULT &apos;00000000-...&apos;, llm_provider VARCHAR(50), llm_model VARCHAR(100), newsletter_prompt TEXT, linkedin_prompt TEXT, twitter_prompt TEXT, max_items_per_channel INT DEFAULT 10, schedule_cron VARCHAR(100)
+Registro Ãºnico (Singleton)
+11. Plan de Desarrollo â€“ Sprints
+Sprint
+Objetivo
+Historias de Usuario / Tasks Clave
+Sprint 0 (1 sem.)
+Setup y Arquitectura Base
+Repositorio Git, proyecto Spring Boot, proyecto React, Docker Compose (PG + App), CI/CD GitHub Actions, documentaciÃ³n OpenAPI base.
+Sprint 1 (2 sem.)
+AutenticaciÃ³n y CRUD Fuentes
+RF-28, RF-29, RF-30, RF-31. Endpoints /auth/**, /admin/users, /admin/sources. Login UI en React.
+Sprint 2 (2 sem.)
+Pipeline de RecolecciÃ³n
+RF-01 al RF-06. Spring Batch Job, adaptadores de comunidad (mock + Discord/Circle), persistencia de actividades.
+Sprint 3 (2 sem.)
+AnÃ¡lisis IA y GeneraciÃ³n
+RF-07 al RF-16. IntegraciÃ³n LLM API, generaciÃ³n de borradores por canal, persistencia de drafts.
+Sprint 4 (2 sem.)
+Panel Editorial
+RF-17 al RF-22, US-01 al US-08. Panel React completo: lista, detalle, editor, aprobaciÃ³n.
+Sprint 5 (2 sem.)
+PublicaciÃ³n y ExportaciÃ³n
+RF-23 al RF-27. LinkedIn API integration, exportaciÃ³n JSON/CSV, gestiÃ³n de reintentos.
+Sprint 6 (2 sem.)
+Admin Panel y Observabilidad
+RF-32, RF-33, US-09 al US-13. Panel de admin, historial, configuraciÃ³n de prompts, mÃ©tricas Prometheus.
+Sprint 7 (1 sem.)
+Testing, Hardening y Demo
+Pruebas E2E, ajuste de cobertura al 80%, documentaciÃ³n final, preparaciÃ³n de demo.
+12. Registro de Riesgos
+ID
+Riesgo
+Probabilidad
+Impacto
+MitigaciÃ³n
+R-01
+API del LLM no disponible o lenta
+Media
+Alto
+Implementar circuit breaker, cache de anÃ¡lisis previos, LLM fallback.
+R-02
+Cambios en LinkedIn API v2
+Baja
+Alto
+AbstracciÃ³n con Port interface; exportaciÃ³n JSON como alternativa.
+R-03
+Costos de API LLM superiores a lo estimado
+Media
+Medio
+LÃ­mites de tokens configurables, monitoreo de uso, cache de resultados.
+R-04
+Falta de acceso a APIs de comunidad (Discord, Circle)
+Media
+Alto
+Mock adapters para desarrollo; contratos de API documentados.
+R-05
+Calidad insuficiente de borradores generados
+Alta
+Medio
+Prompts iterativos, proceso de revisiÃ³n editorial obligatorio.
+R-06
+Scope creep por integraciÃ³n de mÃºltiples plataformas
+Alta
+Medio
+Alcance fijo para MVP: 1 fuente + LinkedIn + exportaciÃ³n JSON.
+13. Glosario
+Pipeline
+Secuencia automatizada de pasos: recolecciÃ³n â†’ anÃ¡lisis IA â†’ generaciÃ³n de borradores.
+Draft / Borrador
+Propuesta de contenido generada por IA, pendiente de revisiÃ³n editorial.
+LLM
+Large Language Model. Modelo de IA de lenguaje grande (ej. Claude, GPT-4).
+Editor
+Usuario del sistema que revisa, edita y aprueba los borradores.
+Canal
+Destino de publicaciÃ³n del contenido: Newsletter, LinkedIn o Twitter/X.
+Scheduler
+Componente que programa la ejecuciÃ³n automÃ¡tica del pipeline (viernes 18:00).
+Embedding
+RepresentaciÃ³n vectorial de texto usada para medir similitud semÃ¡ntica.
+JWT
+JSON Web Token. EstÃ¡ndar de autenticaciÃ³n sin estado (stateless).
+Hexagonal Architecture
+PatrÃ³n de diseÃ±o que separa el dominio del negocio de los adaptadores externos.
+Spring Batch
+Framework de Spring para procesamiento de jobs por lotes (batch processing).
+LinkedIn API v2
+API oficial de LinkedIn para publicar posts y gestionar contenido de pÃ¡gina.
+WCAG 2.1
+Web Content Accessibility Guidelines. EstÃ¡ndar de accesibilidad web.
+Quartz
+LibrerÃ­a Java para programaciÃ³n de jobs con persistencia en base de datos.
+â€” Fin del Documento â€”
+TalentCircle Content Pipeline | Documento de Requisitos v1.0 | 2025
