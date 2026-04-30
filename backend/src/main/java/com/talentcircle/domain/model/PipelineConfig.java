@@ -3,7 +3,7 @@ package com.talentcircle.domain.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity`
+@Entity
 @Table(name = "pipeline_configs")
 public class PipelineConfig extends AuditableEntity {
 

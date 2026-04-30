@@ -9,8 +9,8 @@ import com.talentcircle.domain.port.out.PublicationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service`
-@Transactional`
+@Service
+@Transactional
 public class PublicationService implements PublicationUseCase {
 
     private final DraftRepository draftRepository;
@@ -25,7 +25,7 @@ public class PublicationService implements PublicationUseCase {
         this.linkedInClient = linkedInClient;
     }
 
-    @Override`
+    @Override
     public Publication publishDraft(String draftId) {
         Draft draft = draftRepository.findById(draftId)
                 .orElseThrow(() -> new RuntimeException("Draft not found"));
@@ -56,13 +56,13 @@ public class PublicationService implements PublicationUseCase {
         return publicationRepository.save(publication);
     }
 
-    @Override`
+    @Override
     public byte[] exportJson(String week) {
         // Implementation: fetch approved drafts and generate JSON
         throw new RuntimeException("Export JSON not implemented yet");
     }
 
-    @Override`
+    @Override
     public byte[] exportCsv(String week) {
         // Implementation: fetch approved drafts and generate CSV using OpenCSV
         throw new RuntimeException("Export CSV not implemented yet");

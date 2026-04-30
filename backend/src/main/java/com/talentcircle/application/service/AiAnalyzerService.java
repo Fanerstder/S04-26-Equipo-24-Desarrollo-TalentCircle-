@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@Transactional`
+@Transactional
 public class AiAnalyzerService implements AiAnalyzerUseCase {
 
     private final WeeklyExecutionRepository executionRepository;
@@ -27,7 +27,7 @@ public class AiAnalyzerService implements AiAnalyzerUseCase {
         this.llmClient = llmClient;
     }
 
-    @Override`
+    @Override
     public AiAnalysis analyzeActivity(String executionId, String promptTemplate) {
         WeeklyExecution execution = executionRepository.findById(executionId)
                 .orElseThrow(() -> new RuntimeException("Execution not found"));

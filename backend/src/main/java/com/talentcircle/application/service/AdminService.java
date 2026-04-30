@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service`
-@Transactional`
+@Service
+@Transactional
 public class AdminService implements AdminUseCase {
 
     private final CommunitySourceRepository sourceRepository;
@@ -34,14 +34,14 @@ public class AdminService implements AdminUseCase {
         this.executionRepository = executionRepository;
     }
 
-    @Override`
+    @Override
     public List<SourceDto> getSources() {
         return sourceRepository.findAllActive().stream()
                 .map(this::mapToSourceDto)
                 .collect(Collectors.toList());
     }
 
-    @Override`
+    @Override
     public SourceDto createSource(CreateSourceRequest request) {
         CommunitySource source = new CommunitySource();
         source.setName(request.name());
@@ -54,7 +54,7 @@ public class AdminService implements AdminUseCase {
         return mapToSourceDto(saved);
     }
 
-    @Override`
+    @Override
     public SourceDto updateSource(String id, UpdateSourceRequest request) {
         CommunitySource source = sourceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Source not found"));
@@ -68,7 +68,7 @@ public class AdminService implements AdminUseCase {
         return mapToSourceDto(saved);
     }
 
-    @Override`
+    @Override
     public void deleteSource(String id) {
         CommunitySource source = sourceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Source not found"));
@@ -76,7 +76,7 @@ public class AdminService implements AdminUseCase {
         sourceRepository.save(source);
     }
 
-    @Override`
+    @Override
     public ConfigDto getConfig() {
         PipelineConfig config = configRepository.findSingleton()
                 .orElseGet(() -> {
@@ -86,7 +86,7 @@ public class AdminService implements AdminUseCase {
         return mapToConfigDto(config);
     }
 
-    @Override`
+    @Override
     public ConfigDto updateConfig(UpdateConfigRequest request) {
         PipelineConfig config = configRepository.findSingleton()
                 .orElseGet(() -> new PipelineConfig());
@@ -103,20 +103,20 @@ public class AdminService implements AdminUseCase {
         return mapToConfigDto(saved);
     }
 
-    @Override`
+    @Override
     public List<UserDto> getUsers() {
         return userRepository.findAll().stream()
                 .map(this::mapToUserDto)
                 .collect(Collectors.toList());
     }
 
-    @Override`
+    @Override
     public UserDto createUser(CreateUserRequest request) {
         // Implementation needed
         throw new RuntimeException("Not implemented yet");
     }
 
-    @Override`
+    @Override
     public UserDto updateUser(String id, UpdateUserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -129,21 +129,21 @@ public class AdminService implements AdminUseCase {
         return mapToUserDto(saved);
     }
 
-    @Override`
+    @Override
     public List<ExecutionSummaryDto> getExecutions() {
         return executionRepository.findAll().stream()
                 .map(this::mapToExecutionDto)
                 .collect(Collectors.toList());
     }
 
-    @Override`
+    @Override
     public ExecutionSummaryDto getExecutionDetail(String id) {
         WeeklyExecution execution = executionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Execution not found"));
         return mapToExecutionDto(execution);
     }
 
-    @Override`
+    @Override
     public void triggerExecution(String triggeredBy) {
         // Implementation: trigger pipeline manually
         throw new RuntimeException("Not implemented yet");
