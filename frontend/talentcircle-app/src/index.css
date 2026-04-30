@@ -1,0 +1,68 @@
+:root {
+  --bg: #0d0f14;
+  --surface: #141720;
+  --surface2: #1c2030;
+  --surface3: #232840;
+  --border: #2a2f48;
+  --border2: #353c5e;
+  --amber: #f5a623;
+  --amber-glow: rgba(245,166,35,0.12);
+  --teal: #4ecdc4;
+  --rose: #ff6b8a;
+  --green: #52d68a;
+  --text: #e8eaf2;
+  --text2: #8e93b0;
+  --text3: #5a6080;
+  --linkedin: #0a66c2;
+  --twitter: #1d9bf0;
+  --newsletter: #9b59b6;
+  --r: 12px;
+  --r-sm: 8px;
+  --shadow: 0 8px 32px rgba(0,0,0,.45);
+  --transition: .2s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%;scroll-behavior:smooth}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+#root{height:100vh;display:flex;flex-direction:column}
+button{font-family:inherit;cursor:pointer;border:none;outline:none;background:none}
+input,textarea,select{font-family:inherit;outline:none}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.4}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+.channel-badge{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:20px;font-family:'DM Mono',monospace;white-space:nowrap}
+.channel-badge.linkedin{background:rgba(10,102,194,.2);color:#4d9fd6}
+.channel-badge.twitter{background:rgba(29,155,240,.2);color:var(--twitter)}
+.channel-badge.newsletter{background:rgba(155,89,182,.2);color:#bf8dd6}
+
+.status-badge{font-size:10px;font-weight:600;letter-spacing:.04em;padding:3px 9px;border-radius:20px;font-family:'DM Mono',monospace;white-space:nowrap}
+.status-badge.pending{background:rgba(245,166,35,.15);color:var(--amber)}
+.status-badge.approved{background:rgba(82,214,138,.15);color:var(--green)}
+.status-badge.published{background:rgba(78,205,196,.15);color:var(--teal)}
+.status-badge.rejected{background:rgba(255,107,138,.15);color:var(--rose)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 20px;border-radius:var(--r-sm);font-size:13px;font-weight:700;letter-spacing:.03em;cursor:pointer;transition:var(--transition);border:none;font-family:'Sora',sans-serif}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-amber{background:linear-gradient(135deg,var(--amber),#e8830a);color:#0d0f14;box-shadow:0 3px 14px rgba(245,166,35,.25)}
+.btn-amber:hover{box-shadow:0 6px 24px rgba(245,166,35,.4)}
+.btn-green{background:linear-gradient(135deg,var(--green),#2dbd6e);color:#0d0f14;box-shadow:0 3px 14px rgba(82,214,138,.25)}
+.btn-green:hover{box-shadow:0 6px 20px rgba(82,214,138,.35)}
+.btn-red{background:linear-gradient(135deg,var(--rose),#e04a68);color:#fff;box-shadow:0 3px 14px rgba(255,107,138,.2)}
+.btn-red:hover{box-shadow:0 6px 20px rgba(255,107,138,.3)}
+.btn-ghost{background:var(--surface2);border:1px solid var(--border)!important;color:var(--text2)}
+.btn-ghost:hover{border-color:var(--border2)!important;color:var(--text);box-shadow:none}
+
+.field{margin-bottom:18px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.field input,.field select,.field textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 16px;color:var(--text);font-size:14px;transition:var(--transition)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,166,35,.12)}
+.field input::placeholder,.field textarea::placeholder{color:var(--text3)}

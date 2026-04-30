@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController`
+@RestController
 @RequestMapping("/api/v1/admin/collector")
 public class CommunityCollectorController {
 

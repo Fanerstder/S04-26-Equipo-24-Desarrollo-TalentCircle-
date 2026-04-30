@@ -11,8 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-@Service`
-@Transactional`
+@Service
+@Transactional
 public class AuthService implements AuthUseCase {
 
     private final UserRepository userRepository;
@@ -29,7 +29,7 @@ public class AuthService implements AuthUseCase {
         this.encryptionService = encryptionService;
     }
 
-    @Override`
+    @Override
     public LoginResponse login(LoginRequest request) {
         Optional<User> userOpt = userRepository.findByEmail(request.email());
 
@@ -61,7 +61,7 @@ public class AuthService implements AuthUseCase {
         );
     }
 
-    @Override`
+    @Override
     public LoginResponse refresh(RefreshRequest request) {
         if (!jwtService.isValid(request.refreshToken())) {
             throw new RuntimeException("Invalid refresh token");
@@ -76,13 +76,13 @@ public class AuthService implements AuthUseCase {
         throw new RuntimeException("Refresh token validation not fully implemented");
     }
 
-    @Override`
+    @Override
     public void logout(String userId) {
         // In real implementation, revoke refresh token in DB
         // Mark token as revoked or delete it
     }
 
-    @Override`
+    @Override
     public UserDto createUser(String email, String password, String fullName, String role) {
         if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("Email already exists");
@@ -100,7 +100,7 @@ public class AuthService implements AuthUseCase {
         return new UserDto(saved.getId(), saved.getEmail(), saved.getFullName(), saved.getRole().name());
     }
 
-    @Override`
+    @Override
     public UserDto updateUser(String userId, String fullName, String role, Boolean active) {
         Optional<User> userOpt = userRepository.findById(userId);
 
@@ -125,7 +125,7 @@ public class AuthService implements AuthUseCase {
         return new UserDto(saved.getId(), saved.getEmail(), saved.getFullName(), saved.getRole().name());
     }
 
-    @Override`
+    @Override
     public void changePassword(String userId, String currentPassword, String newPassword) {
         // Implementation needed
         throw new RuntimeException("Not implemented yet");

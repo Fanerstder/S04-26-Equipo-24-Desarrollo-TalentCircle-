@@ -10,8 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Service`
-@Transactional`
+@Service
+@Transactional
 public class CommunityCollectorService implements CommunityCollectorUseCase {
 
     private final CommunityActivityRepository activityRepository;
@@ -23,7 +23,7 @@ public class CommunityCollectorService implements CommunityCollectorUseCase {
         this.executionRepository = executionRepository;
     }
 
-    @Override`
+    @Override
     public void collectActivity(String executionId, String sourceId) {
         // Fetch execution or throw exception
         // In real implementation: fetch from DB
@@ -34,7 +34,7 @@ public class CommunityCollectorService implements CommunityCollectorUseCase {
         activityRepository.save(activity);
     }
 
-    @Override`
+    @Override
     public List<CommunityActivityDto> getActivitiesByExecution(String executionId) {
         List<CommunityActivity> activities = activityRepository.findByExecutionId(executionId);
         return activities.stream()

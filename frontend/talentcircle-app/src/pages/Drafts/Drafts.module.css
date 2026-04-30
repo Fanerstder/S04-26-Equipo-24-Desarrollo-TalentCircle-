@@ -1,0 +1,38 @@
+.page{padding:28px 32px;animation:fadeIn .3s ease}
+.filtersBar{display:flex;align-items:center;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.searchWrap{position:relative;flex:0 0 260px}
+.searchIcon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3)}
+.search{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 14px 8px 34px;color:var(--text);font-size:13px;transition:var(--transition)}
+.search:focus{border-color:var(--amber)}
+.search::placeholder{color:var(--text3)}
+.chip{padding:6px 13px;border-radius:20px;font-size:12px;font-weight:500;background:var(--surface);border:1px solid var(--border);color:var(--text2);cursor:pointer;transition:var(--transition);white-space:nowrap}
+.chip:hover{border-color:var(--border2);color:var(--text)}
+.chip.active{background:var(--amber-glow);border-color:var(--amber);color:var(--amber)}
+.divider{width:1px;height:24px;background:var(--border);flex-shrink:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:var(--transition);display:flex;flex-direction:column}
+.card:hover{border-color:var(--amber);box-shadow:0 4px 24px rgba(245,166,35,.1);transform:translateY(-2px)}
+.cardHeader{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.chanIcon{font-size:18px}
+.chanMeta{flex:1}
+.chanName{display:block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text2)}
+.chanDate{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)}
+.cardBody{padding:14px 16px;flex:1}
+.cardTitle{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;margin-bottom:8px;line-height:1.4}
+.cardPreview{font-size:12.5px;color:var(--text2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cardFooter{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.scoreBar{display:flex;align-items:center;gap:8px}
+.scoreTrack{width:56px;height:4px;background:var(--surface3);border-radius:4px;overflow:hidden}
+.scoreFill{height:100%;background:linear-gradient(90deg,var(--amber),var(--green));border-radius:4px}
+.scoreVal{font-family:'DM Mono',monospace;font-size:11px;color:var(--amber)}
+.cardActions{display:flex;gap:6px;align-items:center}
+.pubLabel{font-family:'DM Mono',monospace;font-size:11px;color:var(--teal)}
+
+.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:var(--transition);font-family:'Sora',sans-serif}
+.approve{background:rgba(82,214,138,.1);border-color:rgba(82,214,138,.3);color:var(--green)}
+.approve:hover{background:rgba(82,214,138,.2);border-color:var(--green)}
+.reject{background:rgba(255,107,138,.08);border-color:rgba(255,107,138,.2);color:var(--rose)}
+.reject:hover{background:rgba(255,107,138,.15);border-color:var(--rose)}
+.publish{background:rgba(245,166,35,.1);border-color:rgba(245,166,35,.3);color:var(--amber)}
+.publish:hover{background:rgba(245,166,35,.2);border-color:var(--amber)}

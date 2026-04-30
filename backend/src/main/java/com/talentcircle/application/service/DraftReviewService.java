@@ -10,8 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service`
-@Transactional`
+@Service
+@Transactional
 public class DraftReviewService implements DraftReviewUseCase {
 
     private final DraftRepository draftRepository;
@@ -23,7 +23,7 @@ public class DraftReviewService implements DraftReviewUseCase {
         this.executionRepository = executionRepository;
     }
 
-    @Override`
+    @Override
     public List<DraftSummaryDto> listDrafts(String channel, String status, String weekStart, String weekEnd, int page, int size) {
         // Implementation: fetch from DB with filters
         List<Draft> drafts = draftRepository.findByFilters(channel, status, weekStart, weekEnd);
@@ -34,14 +34,14 @@ public class DraftReviewService implements DraftReviewUseCase {
                 .collect(Collectors.toList());
     }
 
-    @Override`
+    @Override
     public DraftDetailDto getDraftDetail(String draftId) {
         Draft draft = draftRepository.findById(draftId)
                 .orElseThrow(() -> new RuntimeException("Draft not found"));
         return mapToDetailDto(draft);
     }
 
-    @Override`
+    @Override
     public DraftDetailDto updateContent(String draftId, UpdateContentRequest request) {
         Draft draft = draftRepository.findById(draftId)
                 .orElseThrow(() -> new RuntimeException("Draft not found"));
@@ -54,7 +54,7 @@ public class DraftReviewService implements DraftReviewUseCase {
         return mapToDetailDto(saved);
     }
 
-    @Override`
+    @Override
     public DraftDetailDto approveDraft(String draftId) {
         Draft draft = draftRepository.findById(draftId)
                 .orElseThrow(() -> new RuntimeException("Draft not found"));
@@ -68,7 +68,7 @@ public class DraftReviewService implements DraftReviewUseCase {
         return mapToDetailDto(saved);
     }
 
-    @Override`
+    @Override
     public DraftDetailDto rejectDraft(String draftId, RejectRequest request) {
         Draft draft = draftRepository.findById(draftId)
                 .orElseThrow(() -> new RuntimeException("Draft not found"));

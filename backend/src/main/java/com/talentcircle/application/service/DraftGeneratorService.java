@@ -12,8 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Service`
-@Transactional`
+@Service
+@Transactional
 public class DraftGeneratorService implements DraftGeneratorUseCase {
 
     private final WeeklyExecutionRepository executionRepository;
@@ -31,7 +31,7 @@ public class DraftGeneratorService implements DraftGeneratorUseCase {
         this.llmClient = llmClient;
     }
 
-    @Override`
+    @Override
     public List<Draft> generateDrafts(String executionId) {
         WeeklyExecution execution = executionRepository.findById(executionId)
                 .orElseThrow(() -> new RuntimeException("Execution not found"));
