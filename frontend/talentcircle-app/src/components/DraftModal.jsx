@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, ThumbsDown, ThumbsUp, Loader2 } from 'lucide-react'
+import { X, ThumbsDown, ThumbsUp, Loader2, Send } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 import draftsApi from '../api/draftsApi'
 import styles from './DraftModal.module.css'
@@ -26,6 +26,7 @@ export default function DraftModal() {
   const [detailLoading, setDetailLoading] = useState(false)
   const [text, setText]               = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+  const [publishLoading, setPublishLoading] = useState(false)
 
   const overlayRef = useRef()
 
@@ -119,6 +120,25 @@ export default function DraftModal() {
     }
   }
 
+  // ── Publish ──────────────────────────────────────────────────────────────
+  const handlePublish = async () => {
+    setPublishLoading(true)
+    try {
+      const result = await draftsApi.publish(modalDraftId)
+      if (result.status === 'SUCCESS') {
+        updateDraftStatus(modalDraftId, 'PUBLISHED')
+        closeModal()
+        showToast('✅', 'Borrador publicado', `Publicado exitosamente en ${channelLabel}`)
+      } else {
+        showToast('✗', 'Error al publicar', result.errorMessage ?? 'Error desconocido')
+      }
+    } catch {
+      // HTTP errors already toasted by apiClient interceptor
+    } finally {
+      setPublishLoading(false)
+    }
+  }
+
   return (
     <div
       className={`${styles.overlay} ${modalDraftId ? styles.open : ''}`}
@@ -198,6 +218,19 @@ export default function DraftModal() {
                   ))}
                 </div>
               )}
+
+              {/* Publication info */}
+              {status === 'PUBLISHED' && detail?.publishedAt && (
+                <div className={styles.sources}>
+                  <p className={styles.sourcesTitle}>Información de publicación</p>
+                  <div className={styles.sourceItem}>
+                    <div className={styles.sourceInfo}>
+                      <h5>Publicado el {detail.publishedAt}</h5>
+                      {detail?.externalPostId && <p>ID externo: {detail.externalPostId}</p>}
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -231,6 +264,17 @@ export default function DraftModal() {
             <ThumbsUp size={14} />
             {actionLoading ? '…' : 'Aprobar'}
           </button>
+          {status === 'APPROVED' && (
+            <button
+              className="btn btn-green"
+              onClick={handlePublish}
+              disabled={actionLoading || detailLoading || publishLoading}
+              aria-label={`Publicar en ${channelLabel}`}
+            >
+              <Send size={14} />
+              {publishLoading ? '…' : `Publicar en ${channelLabel}`}
+            </button>
+          )}
         </div>
       </div>
     </div>

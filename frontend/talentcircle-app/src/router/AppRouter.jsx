@@ -17,23 +17,39 @@ function ProtectedRoute({ children }) {
 
 export default function AppRouter() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={
-          <Suspense fallback={<div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>Loading...</div>}>
-            <LandingPage />
-          </Suspense>
-        } />
-        <Route path="/login" element={<Login />} />
-        <Route path="/app" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route index element={<Navigate to="/app/dashboard" replace />} />
-          <Route path="dashboard"  element={<Dashboard />} />
-          <Route path="drafts"     element={<Drafts />} />
-          <Route path="executions" element={<Executions />} />
-          <Route path="admin"      element={<Admin />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+      <BrowserRouter>
+        <Routes>
+          {/* Página pública */}
+          <Route
+              path="/"
+              element={
+                <Suspense fallback={
+                  <div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>
+                    Loading...
+                  </div>
+                }>
+                  <LandingPage />
+                </Suspense>
+              }
+          />
+
+          {/* Login */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Rutas protegidas */}
+          <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route path="dashboard"  element={<Dashboard />} />
+            <Route path="drafts"     element={<Drafts />} />
+            <Route path="executions" element={<Executions />} />
+            <Route path="admin"      element={<Admin />} />
+          </Route>
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
   )
 }
+
+
+

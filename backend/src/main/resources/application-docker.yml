@@ -62,11 +62,11 @@ app:
   llm:
     provider: ${LLM_PROVIDER:openrouter}
     openai:
-      api-key: ${OPENAI_API_KEY}
+      api-key: ${OPENAI_API_KEY:}
       model: gpt-4o-mini
     openrouter:
-      api-key: ${OPENROUTER_API_KEY}
-      model: ${OPENROUTER_MODEL}
+      api-key: ${OPENROUTER_API_KEY:}
+      model: ${OPENROUTER_MODEL:openai/gpt-4o-mini}
 
 springdoc:
   api-docs:

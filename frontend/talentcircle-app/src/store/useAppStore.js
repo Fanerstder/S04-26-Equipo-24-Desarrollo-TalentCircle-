@@ -55,6 +55,8 @@ export const useAppStore = create((set) => ({
   modalDraftId: null,
   openModal: (id) => set({ modalDraftId: id }),
   closeModal: () => set({ modalDraftId: null }),
+  publishingDraftId: null,
+  setPublishingDraftId: (id) => set({ publishingDraftId: id }),
 
   // ── Pipeline state ──────────────────────────────────────────────────────────
   // 'idle' | 'running' | 'completed' | 'failed'

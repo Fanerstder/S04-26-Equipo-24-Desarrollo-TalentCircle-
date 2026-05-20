@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { CheckCircle, XCircle, Search } from 'lucide-react'
+import { CheckCircle, XCircle, Search, Send, Loader2 } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import draftsApi from '../../api/draftsApi'
 import styles from './Drafts.module.css'
@@ -55,6 +55,7 @@ function SkeletonCard() {
 function DraftCard({ draft, onStatusChange }) {
   const { openModal, updateDraftStatus, showToast } = useAppStore()
   const [actionLoading, setActionLoading] = useState(false)
+  const [publishLoading, setPublishLoading] = useState(false)
 
   const pct = draft.aiScore != null ? Math.round(draft.aiScore * 10) : 0
 
@@ -81,6 +82,22 @@ function DraftCard({ draft, onStatusChange }) {
       showToast('✗', 'Borrador rechazado', 'El borrador fue rechazado exitosamente.')
     } finally {
       setActionLoading(false)
+    }
+  }
+
+  const handlePublish = async (e) => {
+    e.stopPropagation()
+    setPublishLoading(true)
+    try {
+      const result = await draftsApi.publish(draft.id)
+      if (result.status === 'SUCCESS') {
+        showToast('✅', 'Borrador publicado', `Borrador publicado exitosamente en ${channelLabel}`)
+        updateDraftStatus(draft.id, 'PUBLISHED')
+      } else if (result.status === 'FAILED') {
+        showToast('✗', 'Error al publicar', result.errorMessage)
+      }
+    } finally {
+      setPublishLoading(false)
     }
   }
 
@@ -134,6 +151,17 @@ function DraftCard({ draft, onStatusChange }) {
               disabled={actionLoading}
             >
               {actionLoading ? '…' : '↺ Revisar'}
+            </button>
+          )}
+          {draft.status === 'APPROVED' && (
+            <button
+              className={`${styles['btn-sm']} ${styles.publish}`}
+              onClick={handlePublish}
+              disabled={publishLoading}
+              aria-label={`Publicar en ${channelLabel}`}
+            >
+              {publishLoading ? <Loader2 size={11} className={styles.spinner} /> : <Send size={11} />}
+              {publishLoading ? '…' : 'Publicar'}
             </button>
           )}
           {draft.status === 'PUBLISHED' && (

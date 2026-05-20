@@ -65,6 +65,9 @@ app:
     person-id: ${LINKEDIN_PERSON_ID:}
     base-url: https://api.linkedin.com
 
+  twitter:
+    bearer-token: ${TWITTER_BEARER_TOKEN:}
+
   llm:
     provider: ${LLM_PROVIDER:openrouter}
     openai:

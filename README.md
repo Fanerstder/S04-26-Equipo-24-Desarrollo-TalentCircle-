@@ -211,6 +211,10 @@ LLM_MODEL=claude-sonnet-4-5-20251001
 LINKEDIN_CLIENT_ID=xxxxxxxxxxxxxxxx
 LINKEDIN_CLIENT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
 LINKEDIN_ACCESS_TOKEN=AQXxxxxxxxxxxxxxxxxxxxxxxxx
+LINKEDIN_PERSON_ID=urn:li:person:xxxxxxxxxxxxxxx
+
+# ── Twitter API ───────────────────────────────────────────────────
+TWITTER_BEARER_TOKEN=AAAAAAAAAAAAAAAAAAAAAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # ── Plataformas de Comunidad ──────────────────────────────────────
 DISCORD_BOT_TOKEN=MTxxxxxxxxxxxxxxxxxxxxxxxx.Gxxxxx.xxxxxxxxxxxxx
@@ -942,6 +946,8 @@ taskkill /PID <PID> /F
 | `LLM_PROVIDER` | ✅ | `ANTHROPIC` | `ANTHROPIC` o `OPENAI` |
 | `LLM_MODEL` | ❌ | `claude-sonnet-4-5-20251001` | Modelo LLM a usar |
 | `LINKEDIN_ACCESS_TOKEN` | ⚠️ | — | Token de LinkedIn (para publicar) |
+| `LINKEDIN_PERSON_ID` | ⚠️ | — | URN del perfil LinkedIn (`urn:li:person:{id}`) |
+| `TWITTER_BEARER_TOKEN` | ⚠️ | — | Bearer Token de Twitter API v2 (para publicar) |
 | `DISCORD_BOT_TOKEN` | ⚠️ | — | Token del bot de Discord |
 | `CIRCLE_API_KEY` | ⚠️ | — | API Key de Circle.so |
 | `PIPELINE_CRON` | ❌ | `0 0 18 * * FRI` | Expresión cron del scheduler |

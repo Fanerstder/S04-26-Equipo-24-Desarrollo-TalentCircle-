@@ -58,5 +58,13 @@ export const updateContent = (id, content) =>
     .patch(`/api/v1/drafts/${id}/content`, { content })
     .then((res) => res.data)
 
-const draftsApi = { list, getDetail, approve, reject, updateContent }
+/**
+ * Publica un borrador aprobado en su canal correspondiente.
+ * @param {string} id UUID del borrador
+ * @returns {Promise<import('../types/api').PublicationDto>}
+ */
+export const publish = (id) =>
+  apiClient.post(`/api/v1/drafts/${id}/publish`).then((res) => res.data)
+
+const draftsApi = { list, getDetail, approve, reject, updateContent, publish }
 export default draftsApi

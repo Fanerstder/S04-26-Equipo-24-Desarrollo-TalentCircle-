@@ -91,3 +91,12 @@ export interface ApiErrorResponse {
   message: string;
   timestamp: string;
 }
+
+export interface PublicationDto {
+  id: string
+  draftId: string
+  status: 'SUCCESS' | 'FAILED'
+  externalPostId: string | null
+  publishedAt: string | null
+  errorMessage: string | null
+}
