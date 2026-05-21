@@ -1,27 +1,6 @@
 import { useState, useEffect } from 'react'
 import './NewsletterPreview.css'
 
-const MOCK_POSTS = [
-  {
-    id: '1',
-    title: 'Weekly Community Digest: Spring Boot & Architecture Trends',
-    date: 'May 18, 2026',
-    excerpt: 'This week our community explored microservices patterns, with heated discussions on hexagonal architecture vs layered architecture. Key takeaway: 73% of members prefer hexagonal for new projects.',
-  },
-  {
-    id: '2',
-    title: 'Top 5 Discussions: AI Integration in Java Apps',
-    date: 'May 11, 2026',
-    excerpt: 'Members shared real-world experiences integrating LLMs into Java backends. The most liked approach? A modular LLM client port with automatic provider fallback — now part of our open-source pipeline.',
-  },
-  {
-    id: '3',
-    title: 'Community Spotlight: Open Source Contributions',
-    date: 'May 4, 2026',
-    excerpt: 'Three new contributors joined the TalentCircle project this week. Highlights include a Discord collector module, improved error handling, and a new SSE streaming endpoint for real-time draft generation.',
-  },
-]
-
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
 export default function NewsletterPreview() {
@@ -29,39 +8,50 @@ export default function NewsletterPreview() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
-  useEffect(() => {
-    if (!BASE_URL) {
-      setPosts(MOCK_POSTS)
-      setLoading(false)
-      return
-    }
+  
+useEffect(() => {
+  if (!BASE_URL) {
+    setPosts([])
+    setLoading(false)
+    return
+  }
 
-    fetch(`${BASE_URL}/api/v1/public/newsletters`, { signal: AbortSignal.timeout(5000) })
+  const fetchNewsletters = () => {
+    console.log("📡 Fetching newsletters...")
+    fetch(`${BASE_URL}/api/v1/public/newsletters`)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch')
         return res.json()
       })
       .then((data) => {
-        if (data && data.length > 0) {
-          setPosts(
-            data.map((n) => ({
-              id: n.id,
-              title: n.title,
-              date: formatDate(n.date),
-              excerpt: n.excerpt,
-            }))
-          )
-        } else {
-          setPosts(MOCK_POSTS)
-        }
+        setPosts(
+          data.map((n) => ({
+            id: n.id,
+            title: n.title,
+            date: formatDate(n.date),
+            excerpt: n.excerpt,
+          }))
+        )
         setLoading(false)
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("❌ Error en fetch:", err)
         setError(true)
-        setPosts(MOCK_POSTS)
+        setPosts([])
         setLoading(false)
       })
-  }, [])
+  }
+
+  // primera llamada al montar
+  fetchNewsletters()
+
+  // refrescar cada 60 segundos
+  const intervalId = setInterval(fetchNewsletters, 60000)
+
+  // limpiar al desmontar
+  return () => clearInterval(intervalId)
+}, [])
+
 
   function formatDate(dateStr) {
     if (!dateStr) return ''
