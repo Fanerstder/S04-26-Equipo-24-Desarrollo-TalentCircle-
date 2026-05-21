@@ -1,72 +1,83 @@
 package com.talentcircle.application.service;
 
+import com.talentcircle.adapter.out.linkedin.LinkedInClientAdapter;
+import com.talentcircle.adapter.out.newsletter.NewsletterPublisherAdapter;
+import com.talentcircle.adapter.out.twitter.TwitterClientAdapter;
+import com.talentcircle.common.exception.ConflictException;
+import com.talentcircle.common.exception.ResourceNotFoundException;
 import com.talentcircle.domain.model.Draft;
 import com.talentcircle.domain.model.Publication;
 import com.talentcircle.domain.port.in.PublicationUseCase;
+import com.talentcircle.domain.port.out.ChannelPublisherPort;
 import com.talentcircle.domain.port.out.DraftRepository;
-import com.talentcircle.domain.port.out.LinkedInClientPort;
 import com.talentcircle.domain.port.out.PublicationRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
 public class PublicationService implements PublicationUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(PublicationService.class);
+
     private final DraftRepository draftRepository;
     private final PublicationRepository publicationRepository;
-    private final LinkedInClientPort linkedInClient;
+    private final Map<Draft.Channel, ChannelPublisherPort> publishers;
 
     public PublicationService(DraftRepository draftRepository,
-                                 PublicationRepository publicationRepository,
-                                 LinkedInClientPort linkedInClient) {
+                              PublicationRepository publicationRepository,
+                              LinkedInClientAdapter linkedInAdapter,
+                              TwitterClientAdapter twitterAdapter,
+                              NewsletterPublisherAdapter newsletterAdapter) {
         this.draftRepository = draftRepository;
         this.publicationRepository = publicationRepository;
-        this.linkedInClient = linkedInClient;
+        this.publishers = Map.of(
+                Draft.Channel.LINKEDIN,   linkedInAdapter,
+                Draft.Channel.TWITTER,    twitterAdapter,
+                Draft.Channel.NEWSLETTER, newsletterAdapter
+        );
     }
 
     @Override
     public PublicationDto publishDraft(String draftId) {
         Draft draft = draftRepository.findById(draftId)
-                .orElseThrow(() -> new IllegalArgumentException("Draft not found: " + draftId));
+                .orElseThrow(() -> new ResourceNotFoundException("Draft not found: " + draftId));
 
         if (draft.getStatus() != Draft.DraftStatus.APPROVED) {
-            throw new IllegalStateException("Only APPROVED drafts can be published");
+            throw new ConflictException("Only APPROVED drafts can be published");
         }
+
+        ChannelPublisherPort publisher = publishers.get(draft.getChannel());
+        String effectiveContent = (draft.getEditedContent() != null && !draft.getEditedContent().isBlank())
+                ? draft.getEditedContent() : draft.getContent();
 
         Publication publication = new Publication();
         publication.setDraft(draft);
-        publication.setChannel(mapChannel(draft.getChannel()));
-        publication.setStatus(Publication.PublicationStatus.RETRYING);
+        publication.setChannel(Publication.Channel.valueOf(draft.getChannel().name()));
         publication.setRetryCount(0);
 
-        // Call LinkedIn API
         try {
-            String externalPostId = linkedInClient.publishPost(draft.getContent());
+            String externalPostId = publisher.publish(effectiveContent);
             publication.setExternalPostId(externalPostId);
             publication.setStatus(Publication.PublicationStatus.SUCCESS);
             publication.setPublishedAt(LocalDateTime.now());
-
             draft.setStatus(Draft.DraftStatus.PUBLISHED);
             draftRepository.save(draft);
+            log.info("Draft {} published on {} — externalId: {}", draftId, draft.getChannel(), externalPostId);
         } catch (Exception e) {
             publication.setStatus(Publication.PublicationStatus.FAILED);
             publication.setErrorMessage(e.getMessage());
+            log.error("Failed to publish draft {} on {}: {}", draftId, draft.getChannel(), e.getMessage());
         }
 
         publication = publicationRepository.save(publication);
-
-        return new PublicationDto(
-                publication.getId(),
-                publication.getDraft().getId(),
-                publication.getStatus().name(),
-                publication.getExternalPostId(),
-                publication.getPublishedAt() != null ? publication.getPublishedAt().toString() : null,
-                publication.getErrorMessage()
-        );
+        return toDto(publication);
     }
 
     @Override
@@ -82,7 +93,7 @@ public class PublicationService implements PublicationUseCase {
         }
 
         if (approvedDrafts.isEmpty()) {
-            throw new IllegalStateException("No approved drafts found for export");
+            throw new ConflictException("No approved drafts found for export");
         }
 
         // Generate export based on format
@@ -93,6 +104,17 @@ public class PublicationService implements PublicationUseCase {
             case "pdf" -> generatePdfExport(approvedDrafts);
             default -> generateCsvExport(approvedDrafts);
         };
+    }
+
+    private PublicationDto toDto(Publication publication) {
+        return new PublicationDto(
+                publication.getId(),
+                publication.getDraft().getId(),
+                publication.getStatus().name(),
+                publication.getExternalPostId(),
+                publication.getPublishedAt() != null ? publication.getPublishedAt().toString() : null,
+                publication.getErrorMessage()
+        );
     }
 
     private byte[] generateCsvExport(List<Draft> drafts) {
@@ -153,12 +175,5 @@ public class PublicationService implements PublicationUseCase {
         }
 
         return pdfContent.toString().getBytes();
-    }
-
-    private Publication.Channel mapChannel(Draft.Channel draftChannel) {
-        if (draftChannel == null) {
-            throw new IllegalArgumentException("Draft channel is null");
-        }
-        return Publication.Channel.valueOf(draftChannel.name());
     }
 }

@@ -34,8 +34,8 @@
 .approve:hover{background:rgba(82,214,138,.2);border-color:var(--green)}
 .reject{background:rgba(255,107,138,.08);border-color:rgba(255,107,138,.2);color:var(--rose)}
 .reject:hover{background:rgba(255,107,138,.15);border-color:var(--rose)}
-.publish{background:rgba(245,166,35,.1);border-color:rgba(245,166,35,.3);color:var(--amber)}
-.publish:hover{background:rgba(245,166,35,.2);border-color:var(--amber)}
+.publish{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3);color:#6366f1}
+.publish:hover{background:rgba(99,102,241,.2);border-color:#6366f1}
 
 /* ── Skeleton loading styles ─────────────────────────────────────────────── */
 @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
@@ -63,3 +63,5 @@
 .approve:hover:not(:disabled){background:rgba(82,214,138,.2);border-color:var(--green)}
 .reject{background:rgba(255,107,138,.08);border-color:rgba(255,107,138,.2);color:var(--rose)}
 .reject:hover:not(:disabled){background:rgba(255,107,138,.15);border-color:var(--rose)}
+.publish{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3);color:#6366f1}
+.publish:hover:not(:disabled){background:rgba(99,102,241,.2);border-color:#6366f1}
