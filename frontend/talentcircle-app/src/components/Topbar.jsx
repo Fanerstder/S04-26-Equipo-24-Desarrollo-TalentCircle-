@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, Play, MoreVertical, AlertTriangle, X } from 'lucide-react'
+import { Bell, Play, Sun, Moon, AlertTriangle, X } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 import adminApi from '../api/adminApi'
 import styles from './Topbar.module.css'
@@ -15,20 +15,19 @@ export default function Topbar() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
 
-  // ─── Estado para abrir/cerrar el menú de los 3 puntitos ───
-  const [menuOpen, setMenuOpen] = useState(false)
-  const menuRef = useRef(null)
+  // ─── Estado para controlar el Modo Oscuro / Claro ───
+  const [darkMode, setDarkMode] = useState(true)
 
-  // Cierra el menú automáticamente si haces clic en cualquier otra parte de la pantalla
+  // Efecto para aplicar la clase al body de la página web completa
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpen(false)
-      }
+    if (darkMode) {
+      document.body.classList.add('dark-mode')
+      document.body.classList.remove('light-mode')
+    } else {
+      document.body.classList.add('light-mode')
+      document.body.classList.remove('dark-mode')
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [darkMode])
 
   const {
     showToast,
@@ -156,51 +155,19 @@ export default function Topbar() {
           )}
         </div>
 
-        {/* ── Botón de Tres Puntitos con Menú Desplegable Flotante ── */}
-        <div style={{ position: 'relative' }} ref={menuRef}>
-          <button 
-            className={styles.iconBtn} 
-            aria-label="Más opciones"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            <MoreVertical size={16} />
-          </button>
-
-          {menuOpen && (
-            <div style={{
-              position: 'absolute',
-              right: 0,
-              top: '100%',
-              marginTop: '8px',
-              background: '#1e1e1e',
-              border: '1px solid #333',
-              borderRadius: '6px',
-              padding: '4px 0',
-              minWidth: '160px',
-              zIndex: 100,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-            }}>
-              <button 
-                onClick={() => { setMenuOpen(false); alert('Abriendo Perfil...'); }}
-                style={{
-                  background: 'none', border: 'none', color: '#fff', width: '100%',
-                  padding: '10px 16px', textAlign: 'left', cursor: 'pointer', fontSize: '13px'
-                }}
-              >
-                Mi Perfil
-              </button>
-              <button 
-                onClick={() => { setMenuOpen(false); alert('Abriendo Configuraciones...'); }}
-                style={{
-                  background: 'none', border: 'none', color: '#fff', width: '100%',
-                  padding: '10px 16px', textAlign: 'left', cursor: 'pointer', fontSize: '13px'
-                }}
-              >
-                Ajustes de Cuenta
-              </button>
-            </div>
+        {/* ── BOTÓN SÚPER INTELIGENTE: Cambia entre Modo Claro y Oscuro ── */}
+        <button 
+          className={styles.iconBtn} 
+          onClick={() => setDarkMode(!darkMode)}
+          title={darkMode ? "Cambiar a Modo Claro" : "Cambiar a Modo Oscuro"}
+          aria-label="Cambiar tema de color"
+        >
+          {darkMode ? (
+            <Sun size={16} color="#ffb703" /> // Si está oscuro, te muestra el sol para cambiar a claro
+          ) : (
+            <Moon size={16} color="#a2d2ff" /> // Si está claro, te muestra la luna para cambiar a oscuro
           )}
-        </div>
+        </button>
       </div>
     </header>
   )
