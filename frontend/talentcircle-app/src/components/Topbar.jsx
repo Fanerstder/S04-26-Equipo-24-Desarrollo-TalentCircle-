@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Bell, Play, MoreVertical, AlertTriangle, X } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
@@ -13,6 +14,21 @@ const STATIC_META = {
 export default function Topbar() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
+
+  // ─── Estado para abrir/cerrar el menú de los 3 puntitos ───
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  // Cierra el menú automáticamente si haces clic en cualquier otra parte de la pantalla
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const {
     showToast,
@@ -140,9 +156,51 @@ export default function Topbar() {
           )}
         </div>
 
-        <button className={styles.iconBtn} aria-label="Más opciones">
-          <MoreVertical size={16} />
-        </button>
+        {/* ── Botón de Tres Puntitos con Menú Desplegable Flotante ── */}
+        <div style={{ position: 'relative' }} ref={menuRef}>
+          <button 
+            className={styles.iconBtn} 
+            aria-label="Más opciones"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            <MoreVertical size={16} />
+          </button>
+
+          {menuOpen && (
+            <div style={{
+              position: 'absolute',
+              right: 0,
+              top: '100%',
+              marginTop: '8px',
+              background: '#1e1e1e',
+              border: '1px solid #333',
+              borderRadius: '6px',
+              padding: '4px 0',
+              minWidth: '160px',
+              zIndex: 100,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+            }}>
+              <button 
+                onClick={() => { setMenuOpen(false); alert('Abriendo Perfil...'); }}
+                style={{
+                  background: 'none', border: 'none', color: '#fff', width: '100%',
+                  padding: '10px 16px', textAlign: 'left', cursor: 'pointer', fontSize: '13px'
+                }}
+              >
+                Mi Perfil
+              </button>
+              <button 
+                onClick={() => { setMenuOpen(false); alert('Abriendo Configuraciones...'); }}
+                style={{
+                  background: 'none', border: 'none', color: '#fff', width: '100%',
+                  padding: '10px 16px', textAlign: 'left', cursor: 'pointer', fontSize: '13px'
+                }}
+              >
+                Ajustes de Cuenta
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   )
