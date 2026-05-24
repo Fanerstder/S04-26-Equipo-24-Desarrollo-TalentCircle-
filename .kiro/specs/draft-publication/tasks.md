@@ -50,7 +50,7 @@ Completar el ciclo editorial end-to-end de TalentCircle añadiendo la publicaci�
     - Property 9 (LinkedIn): Los adaptadores lanzan excepción ante errores HTTP 4xx/5xx — Validates: Requisito 3.3
 
 - [ ] 4. Crear TwitterClientAdapter
-  - [-] 4.1 Implementar TwitterClientAdapter
+  - [ ] 4.1 Implementar TwitterClientAdapter
     - Crear `adapter/out/twitter/TwitterClientAdapter.java` implementando ChannelPublisherPort
     - Inyectar `@Value("${app.twitter.bearer-token:}")` y validar en constructor
     - Truncar contenido > 280 caracteres a 277 + "..." antes de enviar
@@ -81,7 +81,7 @@ Completar el ciclo editorial end-to-end de TalentCircle añadiendo la publicaci�
     - _Requisitos: 5.1_
 
 - [ ] 6. Refactorizar PublicationService para enrutamiento multi-canal
-  - [~] 6.1 Refactorizar el constructor y la lógica de enrutamiento
+  - [ ] 6.1 Refactorizar el constructor y la lógica de enrutamiento
     - Modificar `application/service/PublicationService.java`
     - Reemplazar LinkedInClientPort linkedInClient por Map<Draft.Channel, ChannelPublisherPort> publishers
     - Constructor recibe LinkedInClientAdapter, TwitterClientAdapter, NewsletterPublisherAdapter y construye el mapa con Map.of(...)
@@ -107,30 +107,30 @@ Completar el ciclo editorial end-to-end de TalentCircle añadiendo la publicaci�
     - Property 7: Rechazo de borradores no-APPROVED con ConflictException — Validates: Requisito 2.5
     - Property 14: El registro Publication contiene todos los campos requeridos — Validates: Requisito 8.1
 
-- [~] 7. Checkpoint backend
+- [ ] 7. Checkpoint backend
   - Asegurarse de que todos los tests del backend pasan con mvn test
   - _Requisitos: todos los anteriores_
 
 - [ ] 8. Añadir tipo PublicationDto en el frontend
-  - [~] 8.1 Extender src/types/api.ts con la interfaz PublicationDto
+  - [ ] 8.1 Extender src/types/api.ts con la interfaz PublicationDto
     - Añadir la interfaz con campos: id, draftId, status: 'SUCCESS' | 'FAILED', externalPostId: string | null, publishedAt: string | null, errorMessage: string | null
     - _Requisitos: 6.1, 6.2, 8.2_
 
 - [ ] 9. Añadir función publish en draftsApi
-  - [~] 9.1 Extender src/api/draftsApi.js con la función publish
+  - [ ] 9.1 Extender src/api/draftsApi.js con la función publish
     - Añadir export const publish = (id) => apiClient.post con la ruta /api/v1/drafts/{id}/publish
     - Añadir JSDoc con tipo de retorno Promise<PublicationDto>
     - Exportar publish en el objeto default draftsApi
     - _Requisitos: 2.1, 6.3_
 
 - [ ] 10. Añadir estado de publicación en useAppStore
-  - [~] 10.1 Extender el store con publishingDraftId y su setter
+  - [ ] 10.1 Extender el store con publishingDraftId y su setter
     - Añadir publishingDraftId: null al estado inicial
     - Añadir setPublishingDraftId: (id) => set({ publishingDraftId: id })
     - _Requisitos: 6.3_
 
 - [ ] 11. Implementar botón Publicar en DraftCard
-  - [~] 11.1 Añadir handlePublish y el botón en DraftCard
+  - [ ] 11.1 Añadir handlePublish y el botón en DraftCard
     - Localizar el componente DraftCard dentro de src/pages/Drafts/
     - Importar publish de draftsApi y useAppStore
     - Añadir estado local publishLoading (useState)
@@ -144,7 +144,7 @@ Completar el ciclo editorial end-to-end de TalentCircle añadiendo la publicaci�
     - Property 2: El canal destino es visible junto al botón Publicar — Validates: Requisitos 1.3, 1.4
 
 - [ ] 12. Implementar botón Publicar en DraftModal
-  - [~] 12.1 Añadir handlePublish y el botón en DraftModal
+  - [ ] 12.1 Añadir handlePublish y el botón en DraftModal
     - Modificar src/components/DraftModal.jsx
     - Importar publish de draftsApi
     - Reutilizar actionLoading existente o añadir estado local publishLoading
@@ -171,7 +171,7 @@ Completar el ciclo editorial end-to-end de TalentCircle añadiendo la publicaci�
     - Property 13: Usuarios sin rol EDITOR/ADMIN reciben HTTP 403 — Validates: Requisito 7.2
     - _Requisitos: 2.4, 2.5, 7.1, 7.2, 7.3, 7.4_
 
-- [~] 15. Checkpoint final
+- [ ] 15. Checkpoint final
   - Asegurarse de que todos los tests backend y frontend pasan
   - _Requisitos: todos_
 
