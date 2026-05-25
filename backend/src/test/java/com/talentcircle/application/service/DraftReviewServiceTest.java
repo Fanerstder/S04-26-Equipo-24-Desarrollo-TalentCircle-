@@ -5,6 +5,7 @@ import com.talentcircle.domain.port.in.DraftReviewUseCase;
 import com.talentcircle.domain.port.out.DraftRepository;
 import com.talentcircle.domain.port.out.DraftSourceRepository;
 import com.talentcircle.domain.port.out.DraftVersionRepository;
+import com.talentcircle.domain.port.out.PublicationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,11 +31,14 @@ class DraftReviewServiceTest {
     @Mock
     private DraftSourceRepository sourceRepository;
 
+    @Mock
+    private PublicationRepository publicationRepository;
+
     private DraftReviewService draftReviewService;
 
     @BeforeEach
     void setUp() {
-        draftReviewService = new DraftReviewService(draftRepository, versionRepository, sourceRepository);
+        draftReviewService = new DraftReviewService(draftRepository, versionRepository, sourceRepository, publicationRepository);
     }
 
     @Test

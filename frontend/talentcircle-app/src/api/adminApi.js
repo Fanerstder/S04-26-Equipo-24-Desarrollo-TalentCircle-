@@ -57,6 +57,14 @@ export const createSource = (data) =>
 export const updateSource = (id, data) =>
   apiClient.put(`/api/v1/admin/sources/${id}`, data).then((res) => res.data)
 
+/**
+ * Delete (soft-deactivate) a community source.
+ * @param {string} id
+ * @returns {Promise<void>}
+ */
+export const deleteSource = (id) =>
+  apiClient.delete(`/api/v1/admin/sources/${id}`)
+
 // ─── Pipeline Config ──────────────────────────────────────────────────────────
 
 /**
@@ -73,6 +81,13 @@ export const getConfig = () =>
  */
 export const updateConfig = (data) =>
   apiClient.put('/api/v1/admin/config', data).then((res) => res.data)
+
+/**
+ * Reset all prompt templates to their default values.
+ * @returns {Promise<import('../types/api').ConfigDto>}
+ */
+export const resetPrompts = () =>
+  apiClient.post('/api/v1/admin/config/reset-prompts').then((res) => res.data)
 
 // ─── Executions ───────────────────────────────────────────────────────────────
 
@@ -99,8 +114,10 @@ const adminApi = {
   getSources,
   createSource,
   updateSource,
+  deleteSource,
   getConfig,
   updateConfig,
+  resetPrompts,
   getExecutions,
   triggerExecution,
 }

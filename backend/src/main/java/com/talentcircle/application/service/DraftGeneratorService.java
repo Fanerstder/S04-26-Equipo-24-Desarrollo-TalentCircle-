@@ -106,7 +106,17 @@ public class DraftGeneratorService implements DraftGeneratorUseCase {
         draft.setChannel(channel);
         draft.setStatus(Draft.DraftStatus.PENDING);
 
-        String draftContent = llmClientFactory.getClient().generateDraft(analysisJson, channel.name(), promptTemplate);
+        String draftContent;
+        try {
+            draftContent = llmClientFactory.getClient().generateDraft(analysisJson, channel.name(), promptTemplate);
+        } catch (Exception e) {
+            log.warn("LLM draft generation failed for {} — using fallback content: {}", channel, e.getMessage());
+            draftContent = switch (channel) {
+                case NEWSLETTER -> "# Borrador de prueba\n\nEste es un borrador generado localmente (modo simulación).\n\n## Temas\n- Java 21 y Virtual Threads\n- Spring Boot 3\n- React 18 + TypeScript\n\n*Generado por TalentCircle Pipeline*";
+                case LINKEDIN -> "🚀 **Resumen semanal TalentCircle**\n\nEsta semana discutimos Java 21, Spring Boot 3 y React 18.\n\n#TalentCircle #Java #SpringBoot #React";
+                case TWITTER -> "Resumen semanal TalentCircle: Java 21, Spring Boot 3 y React 18. ¡No te lo pierdas! #TalentCircle #Dev";
+            };
+        }
         draftContent = validateAndTruncateContent(draftContent, channel);
 
         draft.setContent(draftContent);

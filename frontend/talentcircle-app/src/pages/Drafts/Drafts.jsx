@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { CheckCircle, XCircle, Search, Send, Loader2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { CheckCircle, XCircle, Search, Send, Loader2, Edit3, Trash2, X, ExternalLink } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import draftsApi from '../../api/draftsApi'
 import styles from './Drafts.module.css'
@@ -51,8 +52,70 @@ function SkeletonCard() {
   )
 }
 
+// ─── Edit Draft Modal ──────────────────────────────────────────────────────────
+function EditDraftModal({ draftId, onClose, onSaved }) {
+  const { updateDraftContent, updateDraftStatus, showToast } = useAppStore()
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [content, setContent] = useState('')
+
+  useEffect(() => {
+    draftsApi.getDetail(draftId).then((detail) => {
+      setContent(detail.editedContent ?? detail.content ?? '')
+    }).catch(() => {
+      showToast('✗', 'Error', 'No se pudo cargar el contenido del borrador.')
+    }).finally(() => setLoading(false))
+  }, [draftId])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const updated = await draftsApi.updateContent(draftId, content)
+      updateDraftContent(draftId, content)
+      if (updated.editedContent) {
+        updateDraftContent(draftId, updated.editedContent)
+      }
+      showToast('✅', 'Borrador actualizado', 'El contenido se guardó correctamente.')
+      onSaved && onSaved()
+      onClose()
+    } catch {
+      showToast('✗', 'Error', 'No se pudo guardar el borrador.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.editModal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h3>Editar borrador</h3>
+          <button className={styles.closeBtn} onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className={styles.modalBody}>
+          {loading ? (
+            <Loader2 size={24} className="spin" style={{ margin: '40px auto', display: 'block' }} />
+          ) : (
+            <textarea
+              className={styles.modalTextarea}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+          )}
+        </div>
+        <div className={styles.modalFooter}>
+          <button className={styles.btnCancel} onClick={onClose}>Cancelar</button>
+          <button className={styles.btnSave} onClick={handleSave} disabled={saving || loading}>
+            {saving ? 'Guardando…' : 'Guardar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Individual draft card ────────────────────────────────────────────────────
-function DraftCard({ draft, onStatusChange }) {
+function DraftCard({ draft, onStatusChange, onEdit }) {
   const { openModal, updateDraftStatus, showToast } = useAppStore()
   const [actionLoading, setActionLoading] = useState(false)
   const [publishLoading, setPublishLoading] = useState(false)
@@ -105,71 +168,108 @@ function DraftCard({ draft, onStatusChange }) {
   const statusLabel  = STATUS_DISPLAY[draft.status]  ?? draft.status
 
   return (
-    <div className={styles.card} onClick={() => openModal(draft.id)}>
-      <div className={styles.cardHeader}>
-        <div className={styles.chanMeta}>
-          <span className={styles.chanName}>{channelLabel.toUpperCase()}</span>
-          <span className={styles.chanDate}>{draft.createdAt}</span>
-        </div>
-        <span className={`status-badge ${draft.status}`}>{statusLabel}</span>
-      </div>
-      <div className={styles.cardBody}>
-        <p className={styles.cardPreview}>{draft.summary}</p>
-      </div>
-      <div className={styles.cardFooter}>
-        <div className={styles.scoreBar}>
-          <div className={styles.scoreTrack}>
-            <div className={styles.scoreFill} style={{ width: `${pct}%` }} />
+    <>
+      <div className={styles.card} onClick={() => openModal(draft.id)}>
+        <div className={styles.cardHeader}>
+          <div className={styles.chanMeta}>
+            <span className={styles.chanName}>{channelLabel.toUpperCase()}</span>
+            <span className={styles.chanDate}>{draft.createdAt}</span>
           </div>
-          <span className={styles.scoreVal}>✦ {draft.aiScore ?? '—'}</span>
+          <span className={`status-badge ${draft.status}`}>{statusLabel}</span>
         </div>
-        <div className={styles.cardActions} onClick={(e) => e.stopPropagation()}>
-          {draft.status === 'PENDING' && (
-            <>
+        <div className={styles.cardBody}>
+          <p className={styles.cardPreview}>{draft.summary}</p>
+        </div>
+        <div className={styles.cardFooter}>
+          <div className={styles.scoreBar}>
+            <div className={styles.scoreTrack}>
+              <div className={styles.scoreFill} style={{ width: `${pct}%` }} />
+            </div>
+            <span className={styles.scoreVal}>✦ {draft.aiScore ?? '—'}</span>
+          </div>
+          <div className={styles.cardActions} onClick={(e) => e.stopPropagation()}>
+            {draft.status === 'PENDING' && (
+              <>
+                <button
+                  className={`${styles['btn-sm']} ${styles.approve}`}
+                  onClick={handleApprove}
+                  disabled={actionLoading}
+                >
+                  <CheckCircle size={11} />
+                  {actionLoading ? '…' : 'Aprobar'}
+                </button>
+                <button
+                  className={`${styles['btn-sm']} ${styles.reject}`}
+                  onClick={handleReject}
+                  disabled={actionLoading}
+                >
+                  <XCircle size={11} />
+                  {actionLoading ? '…' : 'Rechazar'}
+                </button>
+              </>
+            )}
+            {draft.status === 'REJECTED' && (
               <button
                 className={`${styles['btn-sm']} ${styles.approve}`}
                 onClick={handleApprove}
                 disabled={actionLoading}
               >
-                <CheckCircle size={11} />
-                {actionLoading ? '…' : 'Aprobar'}
+                {actionLoading ? '…' : '↺ Revisar'}
               </button>
+            )}
+            {draft.status === 'APPROVED' && (
               <button
-                className={`${styles['btn-sm']} ${styles.reject}`}
-                onClick={handleReject}
-                disabled={actionLoading}
+                className={`${styles['btn-sm']} ${styles.publish}`}
+                onClick={handlePublish}
+                disabled={publishLoading}
+                aria-label={`Publicar en ${channelLabel}`}
               >
-                <XCircle size={11} />
-                {actionLoading ? '…' : 'Rechazar'}
+                {publishLoading ? <Loader2 size={11} className={styles.spinner} /> : <Send size={11} />}
+                {publishLoading ? '…' : 'Publicar'}
               </button>
+            )}
+          {draft.status === 'PUBLISHED' && (
+            <>
+              {draft.channel === 'NEWSLETTER' && (
+                <Link to="/#newsletter" className={styles.viewBtn}>
+                  <ExternalLink size={11} />
+                  Ver
+                </Link>
+              )}
+              <span className={styles.pubLabel}>↑ Publicado</span>
             </>
           )}
-          {draft.status === 'REJECTED' && (
-            <button
-              className={`${styles['btn-sm']} ${styles.approve}`}
-              onClick={handleApprove}
-              disabled={actionLoading}
-            >
-              {actionLoading ? '…' : '↺ Revisar'}
-            </button>
-          )}
-          {draft.status === 'APPROVED' && (
-            <button
-              className={`${styles['btn-sm']} ${styles.publish}`}
-              onClick={handlePublish}
-              disabled={publishLoading}
-              aria-label={`Publicar en ${channelLabel}`}
-            >
-              {publishLoading ? <Loader2 size={11} className={styles.spinner} /> : <Send size={11} />}
-              {publishLoading ? '…' : 'Publicar'}
-            </button>
-          )}
-          {draft.status === 'PUBLISHED' && (
-            <span className={styles.pubLabel}>↑ Publicado</span>
-          )}
+          </div>
+        </div>
+        <div className={styles.actionsRow} onClick={(e) => e.stopPropagation()}>
+          <button
+            className={`${styles['btn-sm']} ${styles.editBtn}`}
+            onClick={() => onEdit && onEdit(draft.id)}
+            title="Editar contenido"
+          >
+            <Edit3 size={12} />
+            Editar
+          </button>
+          <button
+            className={`${styles['btn-sm']} ${styles.deleteBtn}`}
+            onClick={async () => {
+              if (!window.confirm('¿Eliminar este borrador permanentemente?')) return
+              try {
+                await draftsApi.deleteDraft(draft.id)
+                showToast('✅', 'Borrador eliminado', 'El borrador fue eliminado.')
+                onStatusChange && onStatusChange()
+              } catch {
+                showToast('✗', 'Error', 'No se pudo eliminar el borrador.')
+              }
+            }}
+            title="Eliminar borrador"
+          >
+            <Trash2 size={12} />
+            Eliminar
+          </button>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -181,6 +281,7 @@ export default function Drafts() {
   const [search, setSearch]     = useState('')
   const [channel, setChannel]   = useState('Todos')
   const [status, setStatus]     = useState('Todos')
+  const [editDraftId, setEditDraftId] = useState(null)
 
   // Build filter params for the API call (omit "Todos" = no filter)
   const buildFilters = () => {
@@ -277,9 +378,16 @@ export default function Drafts() {
       ) : (
         <div className={styles.grid}>
           {filtered.map((d) => (
-            <DraftCard key={d.id} draft={d} onStatusChange={fetchDrafts} />
+            <DraftCard key={d.id} draft={d} onStatusChange={fetchDrafts} onEdit={setEditDraftId} />
           ))}
         </div>
+      )}
+      {editDraftId && (
+        <EditDraftModal
+          draftId={editDraftId}
+          onClose={() => setEditDraftId(null)}
+          onSaved={fetchDrafts}
+        />
       )}
     </div>
   )

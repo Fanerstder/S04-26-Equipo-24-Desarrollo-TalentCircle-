@@ -27,15 +27,8 @@
 .scoreFill{height:100%;background:linear-gradient(90deg,var(--amber),var(--green));border-radius:4px}
 .scoreVal{font-family:'DM Mono',monospace;font-size:11px;color:var(--amber)}
 .cardActions{display:flex;gap:6px;align-items:center}
+.actionsRow{display:flex;gap:6px;padding:8px 16px;border-top:1px solid var(--border);background:var(--surface2)}
 .pubLabel{font-family:'DM Mono',monospace;font-size:11px;color:var(--teal)}
-
-.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:var(--transition);font-family:'Sora',sans-serif}
-.approve{background:rgba(82,214,138,.1);border-color:rgba(82,214,138,.3);color:var(--green)}
-.approve:hover{background:rgba(82,214,138,.2);border-color:var(--green)}
-.reject{background:rgba(255,107,138,.08);border-color:rgba(255,107,138,.2);color:var(--rose)}
-.reject:hover{background:rgba(255,107,138,.15);border-color:var(--rose)}
-.publish{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3);color:#6366f1}
-.publish:hover{background:rgba(99,102,241,.2);border-color:#6366f1}
 
 /* ── Skeleton loading styles ─────────────────────────────────────────────── */
 @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
@@ -65,3 +58,28 @@
 .reject:hover:not(:disabled){background:rgba(255,107,138,.15);border-color:var(--rose)}
 .publish{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3);color:#6366f1}
 .publish:hover:not(:disabled){background:rgba(99,102,241,.2);border-color:#6366f1}
+.viewBtn{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(99,102,241,.3);transition:var(--transition);font-family:'Sora',sans-serif;background:rgba(99,102,241,.1);color:#6366f1;text-decoration:none}
+.viewBtn:hover{background:rgba(99,102,241,.2);border-color:#6366f1}
+.editBtn{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3);color:#6366f1}
+.editBtn:hover:not(:disabled){background:rgba(99,102,241,.2);border-color:#6366f1}
+.deleteBtn{background:rgba(255,71,87,.08);border-color:rgba(255,71,87,.2);color:var(--rose)}
+.deleteBtn:hover:not(:disabled){background:rgba(255,71,87,.15);border-color:var(--rose)}
+
+/* ── Edit Modal ─────────────────────────────────────────────────────────────── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .2s ease}
+.editModal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);width:640px;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;animation:slideUp .25s ease}
+.modalHeader{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modalHeader h3{font-size:14px;font-weight:600}
+.closeBtn{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;border-radius:4px}
+.closeBtn:hover{color:var(--text);background:var(--surface2)}
+.modalBody{padding:20px;flex:1;overflow-y:auto}
+.modalTextarea{width:100%;min-height:300px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;line-height:1.6;resize:vertical}
+.modalTextarea:focus{border-color:var(--amber);outline:none}
+.modalFooter{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border)}
+.btnCancel{padding:7px 16px;border-radius:6px;font-size:12px;font-weight:500;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer}
+.btnCancel:hover{background:var(--surface3)}
+.btnSave{padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;background:var(--amber);border:1px solid var(--amber);color:#fff;cursor:pointer}
+.btnSave:hover{filter:brightness(1.1)}
+.btnSave:disabled{opacity:.6;cursor:not-allowed}
+
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}

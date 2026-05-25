@@ -3,10 +3,10 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/talentcircle
-    username: postgres
-    password: admin123
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:h2:mem:talentcircle_db;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
 
   jpa:
     hibernate:
@@ -14,12 +14,12 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.H2Dialect
         format_sql: false
 
   flyway:
     enabled: false
-    locations: classpath:db/migration
+    locations: classpath:db/migration/h2
     baseline-on-migrate: true
     validate-on-migrate: false
     table: flyway_schema_history

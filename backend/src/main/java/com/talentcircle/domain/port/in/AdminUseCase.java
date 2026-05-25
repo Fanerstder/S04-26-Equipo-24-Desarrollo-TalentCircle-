@@ -28,6 +28,7 @@ public interface AdminUseCase {
 
     ConfigDto getConfig();
     ConfigDto updateConfig(UpdateConfigRequest request);
+    ConfigDto resetPromptsToDefaults();
 
     List<UserDto> getUsers();
     UserDto createUser(CreateUserRequest request);
