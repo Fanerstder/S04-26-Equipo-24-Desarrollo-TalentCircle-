@@ -4,6 +4,8 @@ import com.talentcircle.common.exception.ChannelPublicationException;
 import com.talentcircle.domain.model.Publication;
 import com.talentcircle.domain.port.out.ChannelPublisherPort;
 import com.talentcircle.domain.port.out.LinkedInClientPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -21,6 +23,7 @@ import java.util.Map;
 @Component
 public class LinkedInClientAdapter implements ChannelPublisherPort, LinkedInClientPort {
 
+    private static final Logger log = LoggerFactory.getLogger(LinkedInClientAdapter.class);
     private static final String UGCPOSTS_URL = "https://api.linkedin.com/v2/ugcPosts";
 
     private final String accessToken;
@@ -30,15 +33,15 @@ public class LinkedInClientAdapter implements ChannelPublisherPort, LinkedInClie
     public LinkedInClientAdapter(
             @Value("${app.linkedin.access-token:}") String accessToken,
             @Value("${app.linkedin.person-id:}") String personId) {
-        if (accessToken == null || accessToken.isBlank()) {
-            throw new IllegalStateException("LINKEDIN_ACCESS_TOKEN is not configured");
-        }
-        if (personId == null || personId.isBlank()) {
-            throw new IllegalStateException("LINKEDIN_PERSON_ID is not configured");
-        }
         this.accessToken = accessToken;
         this.personId = personId;
         this.restTemplate = new RestTemplate();
+        if (accessToken == null || accessToken.isBlank()) {
+            log.warn("LINKEDIN_ACCESS_TOKEN not configured — LinkedIn publishing disabled");
+        }
+        if (personId == null || personId.isBlank()) {
+            log.warn("LINKEDIN_PERSON_ID not configured — LinkedIn publishing disabled");
+        }
     }
 
     /**
@@ -50,6 +53,12 @@ public class LinkedInClientAdapter implements ChannelPublisherPort, LinkedInClie
      */
     @Override
     public String publish(String content) {
+        if (accessToken == null || accessToken.isBlank()) {
+            throw new ChannelPublicationException("LinkedIn publishing disabled: LINKEDIN_ACCESS_TOKEN not configured", 503);
+        }
+        if (personId == null || personId.isBlank()) {
+            throw new ChannelPublicationException("LinkedIn publishing disabled: LINKEDIN_PERSON_ID not configured", 503);
+        }
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
         headers.setContentType(MediaType.APPLICATION_JSON);

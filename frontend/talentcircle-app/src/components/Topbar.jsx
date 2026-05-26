@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Bell, Play, MoreVertical, AlertTriangle, X } from 'lucide-react'
+import { Bell, Play, Sun, Moon, AlertTriangle, X } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 import adminApi from '../api/adminApi'
 import styles from './Topbar.module.css'
@@ -13,6 +14,20 @@ const STATIC_META = {
 export default function Topbar() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
+
+  // ─── Estado para controlar el Modo Oscuro / Claro ───
+  const [darkMode, setDarkMode] = useState(true)
+
+  // Efecto para aplicar la clase al body de la página web completa
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode')
+      document.body.classList.remove('light-mode')
+    } else {
+      document.body.classList.add('light-mode')
+      document.body.classList.remove('dark-mode')
+    }
+  }, [darkMode])
 
   const {
     showToast,
@@ -140,8 +155,18 @@ export default function Topbar() {
           )}
         </div>
 
-        <button className={styles.iconBtn} aria-label="Más opciones">
-          <MoreVertical size={16} />
+        {/* ── BOTÓN SÚPER INTELIGENTE: Cambia entre Modo Claro y Oscuro ── */}
+        <button 
+          className={styles.iconBtn} 
+          onClick={() => setDarkMode(!darkMode)}
+          title={darkMode ? "Cambiar a Modo Claro" : "Cambiar a Modo Oscuro"}
+          aria-label="Cambiar tema de color"
+        >
+          {darkMode ? (
+            <Sun size={16} color="#ffb703" /> // Si está oscuro, te muestra el sol para cambiar a claro
+          ) : (
+            <Moon size={16} color="#a2d2ff" /> // Si está claro, te muestra la luna para cambiar a oscuro
+          )}
         </button>
       </div>
     </header>

@@ -23,6 +23,18 @@ import java.util.stream.Collectors;
 @Transactional
 public class AdminService implements AdminUseCase {
 
+    private static final String DEFAULT_NEWSLETTER_PROMPT =
+            "Genera un borrador de newsletter semanal en español basado en las siguientes actividades de la comunidad. " +
+            "Incluye un resumen ejecutivo, los temas más relevantes y llamadas a la acción.";
+
+    private static final String DEFAULT_LINKEDIN_PROMPT =
+            "Genera una publicación profesional para LinkedIn en español basada en las siguientes actividades de la comunidad. " +
+            "Tono profesional, máximo 3000 caracteres, incluye hashtags relevantes.";
+
+    private static final String DEFAULT_TWITTER_PROMPT =
+            "Genera un tweet en español basado en las siguientes actividades de la comunidad. " +
+            "Máximo 280 caracteres, tono dinámico, incluye hashtags.";
+
     private final CommunitySourceRepository sourceRepository;
     private final PipelineConfigRepository configRepository;
     private final UserRepository userRepository;
@@ -89,6 +101,16 @@ public class AdminService implements AdminUseCase {
         PipelineConfig config = configRepository.findSingleton()
                 .orElseGet(() -> configRepository.save(new PipelineConfig()));
         return mapToConfigDto(config);
+    }
+
+    @Override
+    public ConfigDto resetPromptsToDefaults() {
+        PipelineConfig config = configRepository.findSingleton()
+                .orElseGet(PipelineConfig::new);
+        config.setNewsletterPrompt(DEFAULT_NEWSLETTER_PROMPT);
+        config.setLinkedInPrompt(DEFAULT_LINKEDIN_PROMPT);
+        config.setTwitterPrompt(DEFAULT_TWITTER_PROMPT);
+        return mapToConfigDto(configRepository.save(config));
     }
 
     @Override
@@ -176,9 +198,9 @@ public class AdminService implements AdminUseCase {
         return new ConfigDto(
                 config.getLlmProvider(),
                 config.getLlmModel(),
-                config.getNewsletterPrompt(),
-                config.getLinkedInPrompt(),
-                config.getTwitterPrompt(),
+                config.getNewsletterPrompt() != null ? config.getNewsletterPrompt() : DEFAULT_NEWSLETTER_PROMPT,
+                config.getLinkedInPrompt() != null ? config.getLinkedInPrompt() : DEFAULT_LINKEDIN_PROMPT,
+                config.getTwitterPrompt() != null ? config.getTwitterPrompt() : DEFAULT_TWITTER_PROMPT,
                 config.getMaxItemsPerChannel(),
                 config.getScheduleCron()
         );

@@ -18,6 +18,13 @@
 .toggleOn{color:var(--green)}
 .toggleOff{color:var(--text3)}
 
+.sourceActions{display:flex;align-items:center;gap:6px;margin-left:auto}
+.srcActionBtn{padding:5px 10px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;background:var(--surface2);border:1px solid var(--border);color:var(--text2);transition:var(--transition);white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.srcActionBtn:hover{background:var(--surface3);border-color:var(--text3)}
+.srcActionBtn:disabled{opacity:.4;cursor:not-allowed}
+.srcDeleteBtn{color:#e74c3c;border-color:rgba(231,76,60,.3)}
+.srcDeleteBtn:hover{background:rgba(231,76,60,.1);border-color:#e74c3c}
+
 .addBtn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;background:rgba(82,214,138,.1);border:1px solid rgba(82,214,138,.3);color:var(--green);transition:var(--transition)}
 .addBtn:hover{background:rgba(82,214,138,.2);border-color:var(--green)}
 

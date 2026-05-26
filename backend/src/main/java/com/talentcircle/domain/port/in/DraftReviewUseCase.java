@@ -36,4 +36,5 @@ public interface DraftReviewUseCase {
     DraftDetailDto updateContent(String draftId, UpdateContentRequest request);
     DraftDetailDto approveDraft(String draftId);
     DraftDetailDto rejectDraft(String draftId, RejectRequest request);
+    void deleteDraft(String draftId);
 }

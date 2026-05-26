@@ -7,6 +7,7 @@ import com.talentcircle.domain.port.in.DraftReviewUseCase;
 import com.talentcircle.domain.port.out.DraftRepository;
 import com.talentcircle.domain.port.out.DraftSourceRepository;
 import com.talentcircle.domain.port.out.DraftVersionRepository;
+import com.talentcircle.domain.port.out.PublicationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -31,13 +32,16 @@ public class DraftReviewService implements DraftReviewUseCase {
     private final DraftRepository draftRepository;
     private final DraftVersionRepository versionRepository;
     private final DraftSourceRepository sourceRepository;
+    private final PublicationRepository publicationRepository;
 
     public DraftReviewService(DraftRepository draftRepository,
                               DraftVersionRepository versionRepository,
-                              DraftSourceRepository sourceRepository) {
+                              DraftSourceRepository sourceRepository,
+                              PublicationRepository publicationRepository) {
         this.draftRepository = draftRepository;
         this.versionRepository = versionRepository;
         this.sourceRepository = sourceRepository;
+        this.publicationRepository = publicationRepository;
     }
 
     // RF-17: Listado paginado con filtros
@@ -168,6 +172,18 @@ public class DraftReviewService implements DraftReviewUseCase {
                 draft.getCreatedAt() != null ? draft.getCreatedAt().toString() : null,
                 preview
         );
+    }
+
+    // RF-Ext: Eliminación de borrador
+    @Override
+    public void deleteDraft(String draftId) {
+        Draft draft = draftRepository.findById(draftId)
+                .orElseThrow(() -> new RuntimeException("Draft not found: " + draftId));
+        sourceRepository.findByDraftId(draftId).forEach(sourceRepository::delete);
+        versionRepository.findByDraftIdOrderByVersionNumberAsc(draftId).forEach(versionRepository::delete);
+        publicationRepository.findByDraftId(draftId).forEach(publicationRepository::delete);
+        draftRepository.delete(draft);
+        log.info("Draft deleted. draftId={}", draftId);
     }
 
     private DraftDetailDto mapToDetailDto(Draft draft) {

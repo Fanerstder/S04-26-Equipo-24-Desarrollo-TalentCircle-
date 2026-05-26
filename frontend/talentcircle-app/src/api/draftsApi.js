@@ -66,5 +66,13 @@ export const updateContent = (id, content) =>
 export const publish = (id) =>
   apiClient.post(`/api/v1/drafts/${id}/publish`).then((res) => res.data)
 
-const draftsApi = { list, getDetail, approve, reject, updateContent, publish }
+/**
+ * Delete a draft permanently.
+ * @param {string} id
+ * @returns {Promise<void>}
+ */
+export const deleteDraft = (id) =>
+  apiClient.delete(`/api/v1/drafts/${id}`)
+
+const draftsApi = { list, getDetail, approve, reject, updateContent, publish, deleteDraft }
 export default draftsApi

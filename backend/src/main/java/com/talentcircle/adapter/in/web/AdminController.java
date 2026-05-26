@@ -287,6 +287,19 @@ public class AdminController {
         return ResponseEntity.ok(adminUseCase.updateConfig(request));
     }
 
+    @Tag(name = "Admin › Config")
+    @Operation(
+        summary = "Restaurar prompts por defecto",
+        description = "Restaura los tres prompts (newsletter, linkedin, twitter) a sus valores por defecto."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Prompts restaurados")
+    })
+    @PostMapping("/config/reset-prompts")
+    public ResponseEntity<ConfigDto> resetPrompts() {
+        return ResponseEntity.ok(adminUseCase.resetPromptsToDefaults());
+    }
+
     // =========================================================================
     // EJECUCIONES DEL PIPELINE
     // =========================================================================

@@ -208,3 +208,27 @@
   color: var(--text);
   background: var(--surface3);
 }
+
+/* ─── MODIFICACIÓN: EFECTO MODO CLARO / OSCURO GLOBAL ─── */
+
+:global(body.light-mode) {
+  --surface: #ffffff !important;
+  --surface2: #f4f4f6 !important;
+  --surface3: #e1e1e6 !important;
+  --border: #d1d1d6 !important;
+  --text: #1e1e1e !important;
+  --text2: #636366 !important;
+  background-color: #ffffff !important;
+  color: #1e1e1e !important;
+}
+
+:global(body.dark-mode) {
+  --surface: #16161a !important;
+  --surface2: #1e1e24 !important;
+  --surface3: #2a2a32 !important;
+  --border: #232329 !important;
+  --text: #ffffff !important;
+  --text2: #a1a1aa !important;
+  background-color: #0f0f11 !important;
+  color: #ffffff !important;
+}

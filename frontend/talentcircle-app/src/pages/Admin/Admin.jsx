@@ -323,6 +323,88 @@ function NewSourceModal({ onClose, onSave }) {
   )
 }
 
+// ─── Edit Source Modal ────────────────────────────────────────────────────────
+function EditSourceModal({ source, onClose, onSave }) {
+  const [form, setForm] = useState({ name: source.name, apiUrl: source.apiUrl ?? '', apiKey: '', active: source.active })
+  const [saving, setSaving] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const payload = { name: form.name, apiUrl: form.apiUrl, active: form.active }
+      if (form.apiKey.trim()) payload.apiKey = form.apiKey
+      await onSave(source.id, payload)
+      onClose()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <h3 className={styles.modalTitle}>Editar fuente</h3>
+        <form onSubmit={handleSubmit}>
+          <div className="field">
+            <label htmlFor="edit-src-name">Nombre</label>
+            <input
+              id="edit-src-name"
+              required
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+          </div>
+          <div className="field">
+            <label>Tipo</label>
+            <input
+              value={source.type}
+              disabled
+              style={{ opacity: 0.5 }}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="edit-src-url">API URL / Guild ID</label>
+            <input
+              id="edit-src-url"
+              value={form.apiUrl}
+              onChange={(e) => setForm({ ...form, apiUrl: e.target.value })}
+              placeholder="Dejar vacío para mantener el actual"
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="edit-src-key">API Key / Token <span style={{ color: 'var(--text3)', fontWeight: 400 }}>(opcional)</span></label>
+            <input
+              id="edit-src-key"
+              type="password"
+              value={form.apiKey}
+              onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
+              placeholder="Dejar vacío para mantener el actual"
+              autoComplete="off"
+            />
+          </div>
+          <div className="field">
+            <label>Estado</label>
+            <select
+              value={form.active ? 'true' : 'false'}
+              onChange={(e) => setForm({ ...form, active: e.target.value === 'true' })}
+            >
+              <option value="true">Activo</option>
+              <option value="false">Inactivo</option>
+            </select>
+          </div>
+          <div className={styles.modalActions}>
+            <button type="button" className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+            <button type="submit" className="btn btn-green" disabled={saving}>
+              {saving ? <><span className={styles.spinner} /> Guardando…</> : 'Guardar cambios'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // ─── Page component ───────────────────────────────────────────────────────────
 export default function Admin() {
   const showToast = useAppStore((s) => s.showToast)
@@ -340,6 +422,7 @@ export default function Admin() {
   // ── Action loading states ───────────────────────────────────────────────────
   const [savingConfig, setSavingConfig]   = useState(false)
   const [savingPrompt, setSavingPrompt]   = useState(false)
+  const [resettingPrompts, setResettingPrompts] = useState(false)
   const [togglingId, setTogglingId]       = useState(null)
 
   // ── UI state ────────────────────────────────────────────────────────────────
@@ -354,6 +437,8 @@ export default function Admin() {
   const [showNewUser, setShowNewUser]     = useState(false)
   const [editingUser, setEditingUser]     = useState(null)
   const [showNewSource, setShowNewSource] = useState(false)
+  const [editingSource, setEditingSource] = useState(null)
+  const [deletingId, setDeletingId]       = useState(null)
 
   // ── Initial parallel fetch ──────────────────────────────────────────────────
   useEffect(() => {
@@ -369,7 +454,7 @@ export default function Admin() {
       .finally(() => { if (!cancelled) setUsersLoading(false) })
 
     const sourcesPromise = adminApi.getSources()
-      .then((data) => { if (!cancelled) setSources(data) })
+      .then((data) => { if (!cancelled) setSources(data.filter((s) => s.active)) })
       .catch(() => { /* toasted by interceptor */ })
       .finally(() => { if (!cancelled) setSourcesLoading(false) })
 
@@ -453,6 +538,24 @@ export default function Admin() {
     }
   }
 
+  // ── Reset prompts to defaults ───────────────────────────────────────────────
+  const handleResetPrompts = async () => {
+    if (!window.confirm('¿Restaurar los prompts a sus valores por defecto?')) return
+    setResettingPrompts(true)
+    try {
+      const updated = await adminApi.resetPrompts()
+      setConfig(updated)
+      setPrompts({
+        newsletter: updated.newsletterPrompt ?? '',
+        linkedin:   updated.linkedinPrompt   ?? '',
+        twitter:    updated.twitterPrompt    ?? '',
+      })
+      showToast('✅', 'Prompts restaurados', 'Valores por defecto cargados')
+    } finally {
+      setResettingPrompts(false)
+    }
+  }
+
   // ── Create user ─────────────────────────────────────────────────────────────
   const handleCreateUser = async (data) => {
     await adminApi.createUser(data)
@@ -475,6 +578,30 @@ export default function Admin() {
     const refreshed = await adminApi.getSources()
     setSources(refreshed)
     showToast('✅', 'Fuente agregada', `${data.name} fue agregada exitosamente`)
+  }
+
+  // ── Update source ───────────────────────────────────────────────────────────
+  const handleUpdateSource = async (id, data) => {
+    await adminApi.updateSource(id, data)
+    const refreshed = await adminApi.getSources()
+    setSources(refreshed)
+    showToast('✅', 'Fuente actualizada', 'Los cambios fueron guardados')
+  }
+
+  // ── Delete source ───────────────────────────────────────────────────────────
+  const handleDeleteSource = async (id, name) => {
+    if (!window.confirm(`¿Eliminar la fuente "${name}"? Se desactivará pero los datos históricos se conservarán.`)) return
+    setDeletingId(id)
+    try {
+      await adminApi.deleteSource(id)
+      setSources((ss) => ss.filter((s) => s.id !== id))
+      showToast('✅', 'Fuente eliminada', `${name} fue desactivada`)
+    } catch (err) {
+      console.error('Error deleting source:', err)
+      showToast('❌', 'Error', err.response?.data?.message || 'No se pudo eliminar la fuente')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   // ── Derive initials from fullName ───────────────────────────────────────────
@@ -504,11 +631,29 @@ export default function Admin() {
                   <h4>{s.name}</h4>
                   <span>{s.type} · {s.active ? 'Activo' : 'Inactivo'}</span>
                 </div>
-                <Toggle
-                  active={s.active}
-                  onChange={() => handleToggleSource(s.id, s.active)}
-                  disabled={togglingId === s.id}
-                />
+                <div className={styles.sourceActions}>
+                  <button
+                    className={styles.srcActionBtn}
+                    onClick={() => setEditingSource(s)}
+                    disabled={deletingId === s.id}
+                    title="Editar fuente"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    className={`${styles.srcActionBtn} ${styles.srcDeleteBtn}`}
+                    onClick={() => handleDeleteSource(s.id, s.name)}
+                    disabled={deletingId === s.id}
+                    title="Eliminar fuente"
+                  >
+                    {deletingId === s.id ? <span className={styles.spinner} /> : 'Eliminar'}
+                  </button>
+                  <Toggle
+                    active={s.active}
+                    onChange={() => handleToggleSource(s.id, s.active)}
+                    disabled={togglingId === s.id || deletingId === s.id}
+                  />
+                </div>
               </div>
             ))
           )}
@@ -607,6 +752,16 @@ export default function Admin() {
           )}
           <div className={styles.promptActions}>
             <button
+              className="btn btn-ghost"
+              onClick={handleResetPrompts}
+              disabled={resettingPrompts || configLoading}
+            >
+              {resettingPrompts
+                ? <><span className={styles.spinner} /> Restaurando…</>
+                : 'Restaurar valores por defecto'
+              }
+            </button>
+            <button
               className="btn btn-green"
               onClick={handleSavePrompt}
               disabled={savingPrompt || configLoading}
@@ -704,6 +859,13 @@ export default function Admin() {
         <NewSourceModal
           onClose={() => setShowNewSource(false)}
           onSave={handleCreateSource}
+        />
+      )}
+      {editingSource && (
+        <EditSourceModal
+          source={editingSource}
+          onClose={() => setEditingSource(null)}
+          onSave={handleUpdateSource}
         />
       )}
     </div>

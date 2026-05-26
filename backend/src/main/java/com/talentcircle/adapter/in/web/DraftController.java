@@ -141,6 +141,27 @@ public class DraftController {
     }
 
     // -------------------------------------------------------------------------
+    // DELETE /api/v1/drafts/{id} — Eliminar borrador
+    // -------------------------------------------------------------------------
+
+    @Operation(
+        summary = "Eliminar borrador",
+        description = "Elimina permanentemente un borrador por su ID."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Borrador eliminado"),
+        @ApiResponse(responseCode = "404", description = "Borrador no encontrado")
+    })
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
+    public ResponseEntity<Void> deleteDraft(
+            @Parameter(description = "UUID del borrador", example = "draft-001")
+            @PathVariable String id) {
+        draftReviewUseCase.deleteDraft(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // -------------------------------------------------------------------------
     // POST /api/v1/drafts/{id}/approve — RF-20: Aprobación
     // -------------------------------------------------------------------------
 

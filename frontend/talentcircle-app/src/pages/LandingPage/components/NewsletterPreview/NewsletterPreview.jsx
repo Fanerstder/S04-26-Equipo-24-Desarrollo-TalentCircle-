@@ -10,12 +10,6 @@ export default function NewsletterPreview() {
 
   
 useEffect(() => {
-  if (!BASE_URL) {
-    setPosts([])
-    setLoading(false)
-    return
-  }
-
   const fetchNewsletters = () => {
     console.log("📡 Fetching newsletters...")
     fetch(`${BASE_URL}/api/v1/public/newsletters`)
